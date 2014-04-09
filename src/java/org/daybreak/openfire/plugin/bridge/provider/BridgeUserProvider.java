@@ -10,6 +10,8 @@ import org.jivesoftware.openfire.user.UserAlreadyExistsException;
 import org.jivesoftware.openfire.user.UserNotFoundException;
 import org.jivesoftware.openfire.user.UserProvider;
 import org.jivesoftware.util.JiveGlobals;
+import org.jivesoftware.util.cache.Cache;
+import org.jivesoftware.util.cache.CacheFactory;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Presence;
 
@@ -29,7 +31,12 @@ public class BridgeUserProvider implements UserProvider {
         if (StringUtils.isNotEmpty(token)) {
             try {
                 org.daybreak.openfire.plugin.bridge.model.User bridgeUser = bridgeService.findUser(token);
-                return new User(bridgeUser.getId(), bridgeUser.getName(), bridgeUser.getEmail(), new Date(), new Date());
+                // 擦除对应的Roster缓存
+                Cache rosterCache = CacheFactory.createCache("Roster");
+                rosterCache.remove(bridgeUser.getId());
+                return new User(bridgeUser.getId(),
+                        bridgeUser.getUsername() + (bridgeUser.getName() == null ? "" : "(" + bridgeUser.getName() + ")"),
+                        bridgeUser.getEmail(), new Date(), new Date());
             } catch (Exception e) {
                 throw new UserNotFoundException();
             }

@@ -13,6 +13,8 @@ import org.jivesoftware.openfire.user.UserAlreadyExistsException;
 import org.jivesoftware.openfire.user.UserNotFoundException;
 import org.jivesoftware.util.JiveGlobals;
 import org.jivesoftware.util.Log;
+import org.jivesoftware.util.cache.Cache;
+import org.jivesoftware.util.cache.CacheFactory;
 import org.xmpp.packet.JID;
 
 import java.io.IOException;
@@ -82,7 +84,7 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
                             RosterItem.SubType.getTypeFromInt(3),
                             RosterItem.AskType.getTypeFromInt(-1),
                             RosterItem.RecvType.getTypeFromInt(-1),
-                            StringUtils.isEmpty(connection.getName()) ? connection.getUsername() : connection.getName(),
+                            connection.getUsername() + (connection.getName() == null ? "" : "(" + connection.getName() + ")"),
                             null
                     );
                     // Add the loaded RosterItem (ie. user contact) to the result
@@ -90,8 +92,20 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
                     itemsByID.put(itemId, item);
                 }
 
-                Collection<Group> groups = GroupManager.getInstance().getGroups(new JID(user.getId()
-                        + at + JiveGlobals.getProperty("xmpp.domain", "127.0.0.1")));
+                JID currentJID = new JID(user.getId()
+                        + at + JiveGlobals.getProperty("xmpp.domain", "127.0.0.1"));
+                // 首先擦除对应的group meta缓存
+                Cache groupMetaCache = CacheFactory.createCache("Group Metadata Cache");
+                Collection<String> cachedGroupNames = (Collection<String>)groupMetaCache.get(currentJID.toBareJID());
+                groupMetaCache.remove(currentJID.toBareJID());
+                // 擦除掉用户所有的group缓存
+                if (cachedGroupNames != null) {
+                    Cache groupCache = CacheFactory.createCache("Group");
+                    for (String cachedGroupName : cachedGroupNames) {
+                        groupCache.remove(cachedGroupName);
+                    }
+                }
+                Collection<Group> groups = GroupManager.getInstance().getGroups(currentJID);
                 for (Group group : groups) {
                     for (JID jid : group.getMembers()) {
                         if (userId.equals(jid.getNode())) {
@@ -102,6 +116,11 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
                         if (item != null) {
                             item.getGroups().add(group.getName());
                         } else {
+                            String nickname = jid.getNode();
+                            org.daybreak.openfire.plugin.bridge.model.User u = bridgeService.findUser(jid.getNode(), token);
+                            if (u != null) {
+                                nickname = u.getUsername() + (u.getName() == null ? "" : "(" + u.getName() + ")");
+                            }
                             List<String> groupNameList = new ArrayList<String>();
                             groupNameList.add(group.getName());
                             item = new RosterItem(
@@ -110,7 +129,7 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
                                     RosterItem.SubType.getTypeFromInt(3),
                                     RosterItem.AskType.getTypeFromInt(-1),
                                     RosterItem.RecvType.getTypeFromInt(-1),
-                                    jid.getNode(),
+                                    nickname,
                                     groupNameList
                             );
                             itemList.add(item);
