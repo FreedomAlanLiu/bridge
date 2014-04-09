@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+
+    <!-- Main plugin class -->
+    <class>org.daybreak.openfire.plugin.bridge.BridgePlugin</class>
+    
+    <!-- Plugin meta-data -->
+    <name>Bridge</name>
+    <description>Bridge</description>
+    <author>daybreak</author>
+    <version>1.0.0</version>
+    <date>4/2/2014</date>
+    <minServerVersion>3.8.0</minServerVersion>
+
+    <!-- UI extension -->
+    <adminconsole></adminconsole>
+    
+</plugin>
