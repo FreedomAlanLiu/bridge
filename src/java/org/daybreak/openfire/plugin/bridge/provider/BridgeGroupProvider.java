@@ -1,5 +1,6 @@
 package org.daybreak.openfire.plugin.bridge.provider;
 
+import org.apache.commons.lang3.StringUtils;
 import org.daybreak.openfire.plugin.bridge.model.Membership;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
 import org.daybreak.openfire.plugin.bridge.service.impl.BridgeServiceImpl;
@@ -23,21 +24,25 @@ public class BridgeGroupProvider extends AbstractGroupProvider {
         Collection<JID> members = new ArrayList<JID>();
         Collection<JID> administrators = new ArrayList<JID>();
         BridgeService bridgeService = BridgeServiceImpl.getInstance();
-        org.daybreak.openfire.plugin.bridge.model.Group bridgeGroup = bridgeService.getBridgeGroup(name);
-        String description = "";
-        if (bridgeGroup != null) {
-            description = bridgeGroup.getDescription();
-            for (Membership membership : bridgeGroup.getMemberships()) {
-                JID jid = new JID(membership.getUser().getId()
-                        + "@" + JiveGlobals.getProperty("xmpp.domain", "127.0.0.1"));
-                if ("manage".equals(membership.getAccess())) {
-                    administrators.add(jid);
-                } else {
-                    members.add(jid);
+        String token = bridgeService.getOneToken();
+        if (StringUtils.isNotEmpty(token)) {
+            try {
+                List<Membership> memberships = bridgeService.findGroupMemberships(name, token);
+                for (Membership membership : memberships) {
+                    JID jid = new JID(membership.getUser().getId()
+                            + "@" + JiveGlobals.getProperty("xmpp.domain", "127.0.0.1"));
+                    if ("manage".equals(membership.getAccess())) {
+                        administrators.add(jid);
+                    } else {
+                        members.add(jid);
+                    }
                 }
+                return new Group(name, "", members, administrators);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         }
-        return new Group(name, description, members, administrators);
+        throw new GroupNotFoundException();
     }
 
     @Override
@@ -64,10 +69,7 @@ public class BridgeGroupProvider extends AbstractGroupProvider {
             List<Membership> membershipList = bridgeService.findUserMemberships(token);
             for (Membership membership : membershipList) {
                 org.daybreak.openfire.plugin.bridge.model.Group bridgeGroup = membership.getGroup();
-                List<Membership> groupMemberships = bridgeService.findGroupMemberships(bridgeGroup.getId(), token);
-                bridgeGroup.setMemberships(groupMemberships);
                 groupNames.add(bridgeGroup.getId());
-                bridgeService.setBridgeGroup(bridgeGroup.getId(), bridgeGroup);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

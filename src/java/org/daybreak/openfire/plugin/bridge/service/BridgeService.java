@@ -27,9 +27,5 @@ public interface BridgeService {
 
     public void removeToken(String userId);
 
-    public Group getBridgeGroup(String groupName);
-
-    public void setBridgeGroup(String groupName, Group group);
-
-    public void removeGroup(String groupname);
+    public String getOneToken();
 }

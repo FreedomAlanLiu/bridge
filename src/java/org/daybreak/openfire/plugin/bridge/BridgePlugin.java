@@ -18,7 +18,8 @@ public class BridgePlugin implements Plugin {
 
     private static final Logger Log = LoggerFactory.getLogger(BridgePlugin.class);
 
-    public static String BRIDGE_HOST = JiveGlobals.getProperty("plugin.bridge.host", "124.205.151.249");
+    // public static String BRIDGE_HOST = JiveGlobals.getProperty("plugin.bridge.host", "124.205.151.249");
+    public static String BRIDGE_HOST = JiveGlobals.getProperty("plugin.bridge.host", "124.205.151.250");
 
     public void initializePlugin(PluginManager manager, File pluginDirectory) {
         System.out.println("Starting Bridge Plugin");

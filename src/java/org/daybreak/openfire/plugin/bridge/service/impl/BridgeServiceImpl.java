@@ -12,12 +12,12 @@ import org.daybreak.openfire.plugin.bridge.model.Group;
 import org.daybreak.openfire.plugin.bridge.model.Membership;
 import org.daybreak.openfire.plugin.bridge.model.User;
 import org.daybreak.openfire.plugin.bridge.utils.HttpConnectionManager;
-import org.jivesoftware.openfire.commands.clearspace.SystemAdminAdded;
 import org.jivesoftware.util.cache.Cache;
 import org.jivesoftware.util.cache.CacheFactory;
 
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -31,11 +31,8 @@ public class BridgeServiceImpl implements BridgeService {
 
     private Cache<String, String> userIdTokenCache;
 
-    private Cache<String, Group> nameGroupCache;
-
     private BridgeServiceImpl() {
         userIdTokenCache = CacheFactory.createCache("BridgeUsernameToken");
-        nameGroupCache = CacheFactory.createCache("BridgeNameGroup");
     }
 
     public static BridgeServiceImpl getInstance() {
@@ -137,22 +134,16 @@ public class BridgeServiceImpl implements BridgeService {
     }
 
     @Override
-    public Group getBridgeGroup(String groupName) {
-        return nameGroupCache.get(groupName);
-    }
-
-    @Override
-    public void setBridgeGroup(String groupName, Group group) {
-        nameGroupCache.put(groupName, group);
-    }
-
-    @Override
     public void removeToken(String userId) {
-        nameGroupCache.remove(userId);
+        userIdTokenCache.remove(userId);
     }
 
     @Override
-    public void removeGroup(String groupname) {
-        nameGroupCache.remove(groupname);
+    public String getOneToken() {
+        Iterator<String> tokenIt = userIdTokenCache.values().iterator();
+        if (tokenIt.hasNext()) {
+            return tokenIt.next();
+        }
+        return null;
     }
 }
