@@ -107,7 +107,10 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
                 }
                 Collection<Group> groups = GroupManager.getInstance().getGroups(currentJID);
                 for (Group group : groups) {
-                    for (JID jid : group.getMembers()) {
+                    Collection<JID> jidCollection = new ArrayList<JID>();
+                    jidCollection.addAll(group.getAdmins());
+                    jidCollection.addAll(group.getMembers());
+                    for (JID jid : jidCollection) {
                         if (userId.equals(jid.getNode())) {
                             continue;
                         }
