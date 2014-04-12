@@ -45,7 +45,7 @@ public class User implements Serializable {
 
     private Profile profile;
 
-    private AccessToken accessToken;
+    private String accessToken;
 
     private List<User> connections;
 
@@ -166,11 +166,11 @@ public class User implements Serializable {
         this.profile = profile;
     }
 
-    public AccessToken getAccessToken() {
+    public String getAccessToken() {
         return accessToken;
     }
 
-    public void setAccessToken(AccessToken accessToken) {
+    public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
     }
 

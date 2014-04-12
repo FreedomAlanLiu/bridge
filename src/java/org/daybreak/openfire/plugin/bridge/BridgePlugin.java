@@ -5,6 +5,7 @@ import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.commands.clearspace.SystemAdminAdded;
 import org.jivesoftware.openfire.container.Plugin;
 import org.jivesoftware.openfire.container.PluginManager;
+import org.jivesoftware.openfire.vcard.VCardManager;
 import org.jivesoftware.util.JiveGlobals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ public class BridgePlugin implements Plugin {
         hackUserProvider();
         hackRosterItemProvider();
         hackGroupProvider();
+        hackVCardProvider();
         // init service
         BridgeServiceImpl.getInstance();
     }
@@ -94,5 +96,13 @@ public class BridgePlugin implements Plugin {
         } catch (Exception ex) {
             Log.error(ex.getMessage());
         }
+    }
+
+    private void hackVCardProvider() {
+        String className = JiveGlobals.getProperty("provider.vcard.className");
+        if (!className.startsWith("org.daybreak")) {
+            return;
+        }
+        VCardManager.getInstance().initialize(XMPPServer.getInstance());
     }
 }

@@ -25,7 +25,7 @@ public interface BridgeService {
 
     public String getToken(String userId);
 
-    public void removeToken(String userId);
+    public User loadUser(String userId);
 
     public String getOneToken();
 }

@@ -8,7 +8,6 @@ import org.daybreak.openfire.plugin.bridge.BridgePlugin;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
 import org.daybreak.openfire.plugin.bridge.exception.BridgeException;
 import org.daybreak.openfire.plugin.bridge.model.AccessToken;
-import org.daybreak.openfire.plugin.bridge.model.Group;
 import org.daybreak.openfire.plugin.bridge.model.Membership;
 import org.daybreak.openfire.plugin.bridge.model.User;
 import org.daybreak.openfire.plugin.bridge.utils.HttpConnectionManager;
@@ -29,10 +28,10 @@ public class BridgeServiceImpl implements BridgeService {
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    private Cache<String, String> userIdTokenCache;
+    private Cache<String, User> idUserCache;
 
     private BridgeServiceImpl() {
-        userIdTokenCache = CacheFactory.createCache("BridgeUsernameToken");
+        idUserCache = CacheFactory.createCache("BridgeUsernameToken");
     }
 
     public static BridgeServiceImpl getInstance() {
@@ -88,6 +87,8 @@ public class BridgeServiceImpl implements BridgeService {
                         + "/api/v1/user", tokenParameters),
                 User.class
         );
+        user.setAccessToken(token);
+        idUserCache.put(user.getId(), user);
         return user;
     }
 
@@ -101,6 +102,7 @@ public class BridgeServiceImpl implements BridgeService {
                         + "/api/v1/users/" + id, tokenParameters),
                 User.class
         );
+        idUserCache.put(user.getId(), user);
         return user;
     }
 
@@ -117,7 +119,12 @@ public class BridgeServiceImpl implements BridgeService {
                 + "/tokens", parameters);
         AccessToken accessToken = mapper.readValue(response, AccessToken.class);
         if (accessToken != null && accessToken.getAccessToken() != null) {
-            userIdTokenCache.put(userId, accessToken.getAccessToken());
+            User user = loadUser(userId);
+            if (user == null) {
+                user = new User();
+            }
+            user.setAccessToken(accessToken.getAccessToken());
+            idUserCache.put(userId, user);
             return accessToken.getAccessToken();
         } else {
             throw new BridgeException(accessToken.getError(), accessToken.getErrorDescription());
@@ -130,19 +137,23 @@ public class BridgeServiceImpl implements BridgeService {
 
     @Override
     public String getToken(String userId) {
-        return userIdTokenCache.get(userId);
+        User user = loadUser(userId);
+        if (user == null) {
+            return null;
+        }
+        return user.getAccessToken();
     }
 
     @Override
-    public void removeToken(String userId) {
-        userIdTokenCache.remove(userId);
+    public User loadUser(String userId) {
+        return idUserCache.get(userId);
     }
 
     @Override
     public String getOneToken() {
-        Iterator<String> tokenIt = userIdTokenCache.values().iterator();
+        Iterator<User> tokenIt = idUserCache.values().iterator();
         if (tokenIt.hasNext()) {
-            return tokenIt.next();
+            return tokenIt.next().getAccessToken();
         }
         return null;
     }
