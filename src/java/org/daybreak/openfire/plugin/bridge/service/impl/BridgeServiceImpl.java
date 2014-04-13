@@ -151,9 +151,12 @@ public class BridgeServiceImpl implements BridgeService {
 
     @Override
     public String getOneToken() {
-        Iterator<User> tokenIt = idUserCache.values().iterator();
-        if (tokenIt.hasNext()) {
-            return tokenIt.next().getAccessToken();
+        Iterator<User> userIterator = idUserCache.values().iterator();
+        while (userIterator.hasNext()) {
+            String token = userIterator.next().getAccessToken();
+            if (token != null) {
+                return token;
+            }
         }
         return null;
     }
