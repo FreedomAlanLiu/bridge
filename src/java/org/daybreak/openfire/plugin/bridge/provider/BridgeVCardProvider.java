@@ -1,8 +1,12 @@
 package org.daybreak.openfire.plugin.bridge.provider;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.daybreak.openfire.plugin.bridge.BridgePlugin;
 import org.daybreak.openfire.plugin.bridge.model.User;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
 import org.daybreak.openfire.plugin.bridge.service.impl.BridgeServiceImpl;
+import org.daybreak.openfire.plugin.bridge.utils.HttpConnectionManager;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -13,9 +17,10 @@ import org.jivesoftware.util.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.StringReader;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 /**
  * Created by Alan on 2014/4/13.
@@ -41,10 +46,35 @@ public class BridgeVCardProvider implements VCardProvider {
         VCard vard = new VCard();
         vard.setNickName(bridgeUser.getUsername() + (bridgeUser.getName() == null ? "" : "(" + bridgeUser.getName() + ")"));
         vard.setEmailHome(bridgeUser.getEmail());
+
+        BufferedInputStream in = null;
+        ByteArrayOutputStream out = null;
         try {
-            vard.setAvatar(new URL(bridgeUser.getAvatarUrl()));
-        } catch (MalformedURLException e) {
+            HttpResponse response = HttpConnectionManager.getHttpRequest("http://" + BridgePlugin.BRIDGE_HOST + bridgeUser.getAvatarUrl(), null);
+            HttpEntity entity = response.getEntity();
+            in = new BufferedInputStream((entity.getContent()));
+            out = new ByteArrayOutputStream();
+            int b = in.read();
+            while (b != -1) {
+                out.write(b);
+                b = in.read();
+            }
+            vard.setAvatar(out.toByteArray());
+        } catch (IOException e) {
             logger.error("avatar setting error", e);
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                }
+            }
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                }
+            }
         }
 
         String xml = vard.getChildElementXML();
