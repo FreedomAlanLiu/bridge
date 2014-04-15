@@ -31,11 +31,7 @@ public class BridgeGroupProvider extends AbstractGroupProvider {
                 for (Membership membership : memberships) {
                     JID jid = new JID(membership.getUser().getId()
                             + "@" + JiveGlobals.getProperty("xmpp.domain", "127.0.0.1"));
-                    if ("manage".equals(membership.getAccess())) {
-                        administrators.add(jid);
-                    } else {
-                        members.add(jid);
-                    }
+                    members.add(jid);
                 }
                 return new Group(name, "", members, administrators);
             } catch (Exception e) {
