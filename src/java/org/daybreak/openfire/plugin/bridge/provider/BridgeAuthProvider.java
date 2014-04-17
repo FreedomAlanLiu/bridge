@@ -45,6 +45,7 @@ public class BridgeAuthProvider implements AuthProvider {
         try {
             bridgeService.auth(userId, password);
         } catch (Exception e) {
+            Log.error("Authentication failed by bridge api!", e);
             if (e instanceof IOException) {
                 throw new ConnectionException();
             } else if (e instanceof BridgeException) {
