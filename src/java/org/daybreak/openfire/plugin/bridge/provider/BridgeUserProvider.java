@@ -28,20 +28,35 @@ public class BridgeUserProvider implements UserProvider {
     public User loadUser(String userId) throws UserNotFoundException {
         BridgeService bridgeService = BridgeServiceImpl.getInstance();
         String token = bridgeService.getToken(userId);
-        if (StringUtils.isNotEmpty(token)) {
-            try {
+        try {
+            if (StringUtils.isNotEmpty(token)) {
                 org.daybreak.openfire.plugin.bridge.model.User bridgeUser = bridgeService.findUser(token);
+                if (bridgeUser == null) {
+                    throw new UserNotFoundException();
+                }
                 // 擦除对应的Roster缓存
                 Cache rosterCache = CacheFactory.createCache("Roster");
                 rosterCache.remove(bridgeUser.getId());
                 return new User(bridgeUser.getId(),
-                        bridgeUser.getUsername() + (bridgeUser.getName() == null ? "" : "(" + bridgeUser.getName() + ")"),
+                        bridgeUser.getUsername() + (StringUtils.isBlank(bridgeUser.getName()) ? "" : "(" + bridgeUser.getName() + ")"),
                         bridgeUser.getEmail(), new Date(), new Date());
-            } catch (Exception e) {
-                throw new UserNotFoundException();
+
+            } else {
+                token = bridgeService.getOneToken();
+                if (StringUtils.isEmpty(token)) {
+                    throw new UserNotFoundException();
+                }
+                org.daybreak.openfire.plugin.bridge.model.User bridgeUser = bridgeService.findUser(userId, token);
+                if (bridgeUser == null) {
+                    throw new UserNotFoundException();
+                }
+                return new User(bridgeUser.getId(),
+                        bridgeUser.getUsername() + (StringUtils.isBlank(bridgeUser.getName()) ? "" : "(" + bridgeUser.getName() + ")"),
+                        bridgeUser.getEmail(), new Date(), new Date());
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        throw new UserNotFoundException();
     }
 
     @Override
