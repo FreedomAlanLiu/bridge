@@ -92,7 +92,6 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
                     itemsByID.put(itemId, item);
                 }
 
-                /*
                 JID currentJID = new JID(user.getId()
                         + at + JiveGlobals.getProperty("xmpp.domain", "127.0.0.1"));
                 // 首先擦除对应的group meta缓存
@@ -141,7 +140,6 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
                         }
                     }
                 }
-                */
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
