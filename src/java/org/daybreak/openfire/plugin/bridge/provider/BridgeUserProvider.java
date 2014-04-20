@@ -2,18 +2,13 @@ package org.daybreak.openfire.plugin.bridge.provider;
 
 import org.apache.commons.lang3.StringUtils;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
-import org.daybreak.openfire.plugin.bridge.service.impl.BridgeServiceImpl;
-import org.jivesoftware.openfire.SessionManager;
-import org.jivesoftware.openfire.session.ClientSession;
+import org.daybreak.openfire.plugin.bridge.BridgeServiceFactory;
 import org.jivesoftware.openfire.user.User;
 import org.jivesoftware.openfire.user.UserAlreadyExistsException;
 import org.jivesoftware.openfire.user.UserNotFoundException;
 import org.jivesoftware.openfire.user.UserProvider;
-import org.jivesoftware.util.JiveGlobals;
 import org.jivesoftware.util.cache.Cache;
 import org.jivesoftware.util.cache.CacheFactory;
-import org.xmpp.packet.JID;
-import org.xmpp.packet.Presence;
 
 import java.util.Collection;
 import java.util.Date;
@@ -26,7 +21,7 @@ public class BridgeUserProvider implements UserProvider {
 
     @Override
     public User loadUser(String userId) throws UserNotFoundException {
-        BridgeService bridgeService = BridgeServiceImpl.getInstance();
+        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");;
         String token = bridgeService.getToken(userId);
         try {
             if (StringUtils.isNotEmpty(token)) {

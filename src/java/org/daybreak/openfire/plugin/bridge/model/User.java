@@ -14,6 +14,9 @@ public class User implements Serializable {
 
     private String id;
 
+    @JsonProperty("channel_id")
+    private Long channelId;
+
     private String username;
 
     private String email;
@@ -60,6 +63,14 @@ public class User implements Serializable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public Long getChannelId() {
+        return channelId;
+    }
+
+    public void setChannelId(Long channelId) {
+        this.channelId = channelId;
     }
 
     public String getUsername() {

@@ -2,9 +2,8 @@ package org.daybreak.openfire.plugin.bridge.provider;
 
 import com.google.common.hash.Hashing;
 import org.apache.commons.lang3.StringUtils;
-import org.daybreak.openfire.plugin.bridge.model.User;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
-import org.daybreak.openfire.plugin.bridge.service.impl.BridgeServiceImpl;
+import org.daybreak.openfire.plugin.bridge.BridgeServiceFactory;
 import org.jivesoftware.openfire.group.Group;
 import org.jivesoftware.openfire.group.GroupManager;
 import org.jivesoftware.openfire.roster.RosterItem;
@@ -12,12 +11,10 @@ import org.jivesoftware.openfire.roster.RosterItemProvider;
 import org.jivesoftware.openfire.user.UserAlreadyExistsException;
 import org.jivesoftware.openfire.user.UserNotFoundException;
 import org.jivesoftware.util.JiveGlobals;
-import org.jivesoftware.util.Log;
 import org.jivesoftware.util.cache.Cache;
 import org.jivesoftware.util.cache.CacheFactory;
 import org.xmpp.packet.JID;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 
@@ -69,7 +66,7 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
         Map<Long, RosterItem> itemsByID = new HashMap<Long, RosterItem>();
 
         try {
-            BridgeService bridgeService = BridgeServiceImpl.getInstance();
+            BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");;
             String token = bridgeService.getToken(userId);
             if (StringUtils.isNotEmpty(token)) {
                 org.daybreak.openfire.plugin.bridge.model.User user = bridgeService.findUser(token);
@@ -149,7 +146,7 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
 
     private List<org.daybreak.openfire.plugin.bridge.model.User> getConnections(String userId) {
         try {
-            BridgeService bridgeService = BridgeServiceImpl.getInstance();
+            BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");;
             String token = bridgeService.getToken(userId);
             if (StringUtils.isNotEmpty(token)) {
                 List<org.daybreak.openfire.plugin.bridge.model.User> connections = bridgeService.findConnections(token);

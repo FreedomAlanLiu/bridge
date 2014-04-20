@@ -5,7 +5,7 @@ import org.apache.http.HttpResponse;
 import org.daybreak.openfire.plugin.bridge.BridgePlugin;
 import org.daybreak.openfire.plugin.bridge.model.User;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
-import org.daybreak.openfire.plugin.bridge.service.impl.BridgeServiceImpl;
+import org.daybreak.openfire.plugin.bridge.BridgeServiceFactory;
 import org.daybreak.openfire.plugin.bridge.utils.HttpConnectionManager;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -31,7 +31,7 @@ public class BridgeVCardProvider implements VCardProvider {
 
     @Override
     public Element loadVCard(String userId) {
-        BridgeService bridgeService = BridgeServiceImpl.getInstance();
+        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
         User bridgeUser = bridgeService.loadUser(userId);
         if (bridgeUser == null) {
             String token = bridgeService.getOneToken();

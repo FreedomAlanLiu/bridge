@@ -5,6 +5,8 @@ import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.commands.clearspace.SystemAdminAdded;
 import org.jivesoftware.openfire.container.Plugin;
 import org.jivesoftware.openfire.container.PluginManager;
+import org.jivesoftware.openfire.interceptor.InterceptorManager;
+import org.jivesoftware.openfire.interceptor.PacketInterceptor;
 import org.jivesoftware.openfire.vcard.VCardManager;
 import org.jivesoftware.util.JiveGlobals;
 import org.slf4j.Logger;
@@ -23,6 +25,8 @@ public class BridgePlugin implements Plugin {
     //public static String BRIDGE_HOST = JiveGlobals.getProperty("plugin.bridge.host", "124.205.151.249");
     public static String BRIDGE_HOST = JiveGlobals.getProperty("plugin.bridge.host", "124.205.151.250");
 
+    private PacketInterceptor bridgePacketInterceptor;
+
     public void initializePlugin(PluginManager manager, File pluginDirectory) {
         System.out.println("Starting Bridge Plugin");
         // hack providers
@@ -31,11 +35,15 @@ public class BridgePlugin implements Plugin {
         hackRosterItemProvider();
         hackGroupProvider();
         hackVCardProvider();
-        // init service
-        BridgeServiceImpl.getInstance();
+
+        // 添加消息拦截器
+        bridgePacketInterceptor = new BridgePacketInterceptor();
+        InterceptorManager.getInstance().addInterceptor(bridgePacketInterceptor);
     }
 
     public void destroyPlugin() {
+        // 移除消息拦截器
+        InterceptorManager.getInstance().removeInterceptor(bridgePacketInterceptor);
     }
 
     private void hackAuthProvider() {

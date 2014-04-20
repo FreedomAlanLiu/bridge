@@ -3,7 +3,7 @@ package org.daybreak.openfire.plugin.bridge.provider;
 import org.apache.commons.lang3.StringUtils;
 import org.daybreak.openfire.plugin.bridge.model.Membership;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
-import org.daybreak.openfire.plugin.bridge.service.impl.BridgeServiceImpl;
+import org.daybreak.openfire.plugin.bridge.BridgeServiceFactory;
 import org.jivesoftware.openfire.group.AbstractGroupProvider;
 import org.jivesoftware.openfire.group.Group;
 import org.jivesoftware.openfire.group.GroupNotFoundException;
@@ -23,7 +23,7 @@ public class BridgeGroupProvider extends AbstractGroupProvider {
     public Group getGroup(String name) throws GroupNotFoundException {
         Collection<JID> members = new ArrayList<JID>();
         Collection<JID> administrators = new ArrayList<JID>();
-        BridgeService bridgeService = BridgeServiceImpl.getInstance();
+        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");;
         String token = bridgeService.getOneToken();
         if (StringUtils.isNotEmpty(token)) {
             try {
@@ -59,7 +59,7 @@ public class BridgeGroupProvider extends AbstractGroupProvider {
     @Override
     public Collection<String> getGroupNames(JID user) {
         List<String> groupNames = new ArrayList<String>();
-        BridgeService bridgeService = BridgeServiceImpl.getInstance();
+        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");;
         String token = bridgeService.getToken(user.getNode());
         try {
             List<Membership> membershipList = bridgeService.findUserMemberships(token);

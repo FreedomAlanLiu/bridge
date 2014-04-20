@@ -24,18 +24,12 @@ import java.util.List;
  */
 public class BridgeServiceImpl implements BridgeService {
 
-    private static BridgeServiceImpl bridgeServiceImpl = new BridgeServiceImpl();
-
     private ObjectMapper mapper = new ObjectMapper();
 
     private Cache<String, User> idUserCache;
 
-    private BridgeServiceImpl() {
+    public BridgeServiceImpl() {
         idUserCache = CacheFactory.createCache("BridgeUsernameToken");
-    }
-
-    public static BridgeServiceImpl getInstance() {
-        return bridgeServiceImpl;
     }
 
     @Override
