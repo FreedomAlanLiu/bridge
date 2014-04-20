@@ -13,23 +13,21 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
+import java.text.MessageFormat;
+
 /**
  * Created by Alan on 2014/4/20.
  */
 public class BridgePacketInterceptor implements PacketInterceptor {
 
+    public static final String PUSHING_MESSAGE_JSON = "{\"type\":\"chat\",\"value\":\"{0}\"}";
+
     @Override
     public void interceptPacket(Packet packet, Session session, boolean incoming, boolean processed) throws PacketRejectedException {
         boolean bccsActivate = JiveGlobals.getBooleanProperty("plugin.bridge.bccs.activate", false);
-        if (!bccsActivate) {
+        if (!bccsActivate || !incoming || !processed) {
             return;
         }
-        if (!incoming || !processed) {
-            return;
-        }
-
-        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
-        BaiduYunService baiduYunService = (BaiduYunService) BridgeServiceFactory.getBean("baiduYunService");
 
         if (packet instanceof Message) {
             Message message = (Message) packet;
@@ -39,21 +37,26 @@ public class BridgePacketInterceptor implements PacketInterceptor {
             if (StringUtils.isEmpty(messageBody)) {
                 return;
             }
+
+            BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
             User fromUser = bridgeService.loadUser(fromJID.getNode());
             if (fromUser == null) {
                 return;
             }
-            String pushMessage = fromUser.getUsername()
+            String pushingMessageValue = fromUser.getUsername()
                     + (StringUtils.isBlank(fromUser.getName()) ? "" : "(" + fromUser.getName() + ")")
                     + "：" + messageBody;
+            String pushingMessage = MessageFormat.format(PUSHING_MESSAGE_JSON, pushingMessageValue);
+
+            BaiduYunService baiduYunService = (BaiduYunService) BridgeServiceFactory.getBean("baiduYunService");
             if (XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(toJID.getDomain())) {
                 User toUser = bridgeService.loadUser(toJID.getNode());
                 if (toUser == null) {
                     return;
                 }
-                baiduYunService.pushMessage(toUser.getChannelId(), toUser.getId(), pushMessage);
+                baiduYunService.pushMessage(toUser.getChannelId(), toUser.getBaiduUserId(), pushingMessage);
             } else {
-                baiduYunService.pushTagMessage(toJID.getNode(), pushMessage);
+                baiduYunService.pushTagMessage(toJID.getNode(), pushingMessage);
             }
         }
     }

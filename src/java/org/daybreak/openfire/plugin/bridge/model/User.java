@@ -15,7 +15,10 @@ public class User implements Serializable {
     private String id;
 
     @JsonProperty("channel_id")
-    private Long channelId;
+    private Long channelId = 3514649928018607252L;
+
+    @JsonProperty("baidu_user_id")
+    private String baiduUserId = "1125670498307356435";
 
     private String username;
 
@@ -71,6 +74,14 @@ public class User implements Serializable {
 
     public void setChannelId(Long channelId) {
         this.channelId = channelId;
+    }
+
+    public String getBaiduUserId() {
+        return baiduUserId;
+    }
+
+    public void setBaiduUserId(String baiduUserId) {
+        this.baiduUserId = baiduUserId;
     }
 
     public String getUsername() {
