@@ -1,6 +1,7 @@
 package org.daybreak.openfire.plugin.bridge;
 
 import org.apache.commons.lang3.StringUtils;
+import org.daybreak.openfire.plugin.bridge.model.Device;
 import org.daybreak.openfire.plugin.bridge.model.User;
 import org.daybreak.openfire.plugin.bridge.service.BaiduYunService;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
@@ -19,8 +20,6 @@ import java.text.MessageFormat;
  * Created by Alan on 2014/4/20.
  */
 public class BridgePacketInterceptor implements PacketInterceptor {
-
-    public static final String PUSHING_MESSAGE_JSON = "{\"type\":\"chat\",\"value\":\"{0}\"}";
 
     @Override
     public void interceptPacket(Packet packet, Session session, boolean incoming, boolean processed) throws PacketRejectedException {
@@ -46,7 +45,7 @@ public class BridgePacketInterceptor implements PacketInterceptor {
             String pushingMessageValue = fromUser.getUsername()
                     + (StringUtils.isBlank(fromUser.getName()) ? "" : "(" + fromUser.getName() + ")")
                     + "：" + messageBody;
-            String pushingMessage = MessageFormat.format(PUSHING_MESSAGE_JSON, pushingMessageValue);
+            String pushingMessage = "{\"type\":\"chat\",\"value\":\"" + pushingMessageValue + "\"}";
 
             BaiduYunService baiduYunService = (BaiduYunService) BridgeServiceFactory.getBean("baiduYunService");
             if (XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(toJID.getDomain())) {
@@ -54,9 +53,17 @@ public class BridgePacketInterceptor implements PacketInterceptor {
                 if (toUser == null) {
                     return;
                 }
-                baiduYunService.pushMessage(toUser.getChannelId(), toUser.getBaiduUserId(), pushingMessage);
+                String token = bridgeService.getToken(toUser.getId());
+                if (token != null) {
+                    try {
+                        Device device = bridgeService.findDevice(token);
+                        baiduYunService.pushMessage(device.getChannelId(), device.getBaiduUserId(), device.getDeviceType(), pushingMessage);
+                    } catch (Exception e) {
+                    }
+                }
             } else {
-                baiduYunService.pushTagMessage(toJID.getNode(), pushingMessage);
+                baiduYunService.pushTagMessage(toJID.getNode(), "android", pushingMessage);
+                baiduYunService.pushTagMessage(toJID.getNode(), "ios", pushingMessage);
             }
         }
     }

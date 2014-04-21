@@ -5,7 +5,7 @@ package org.daybreak.openfire.plugin.bridge.service;
  */
 public interface BaiduYunService {
 
-    public void pushMessage(Long channelId, String userId, String message);
+    public void pushMessage(Long channelId, String userId, String deviceTypeStr, String message);
 
-    public void pushTagMessage(String tagName, String message);
+    public void pushTagMessage(String tagName, String deviceTypeStr, String message);
 }

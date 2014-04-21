@@ -25,8 +25,6 @@ public class BaiduYunServiceImpl implements BaiduYunService {
 
     private BaiduChannelClient channelClient;
 
-    private DeviceType requestDeviceType = DeviceType.ALL;
-
     public BaiduYunServiceImpl() {
         // 设置developer平台的ApiKey/SecretKey
         String apiKey = JiveGlobals.getProperty("plugin.bridge.bccs.ak", "FOVIVsKp1WTQRQHzW1jvtD8F");
@@ -43,24 +41,20 @@ public class BaiduYunServiceImpl implements BaiduYunService {
                 logger.info(event.getMessage());
             }
         });
-
-        String device = JiveGlobals.getProperty("plugin.bridge.bccs.device", "all");
-        for (DeviceType deviceType : DeviceType.values()) {
-            if (deviceType.toString().equals(device.toUpperCase())) {
-                requestDeviceType = deviceType;
-                break;
-            }
-        }
     }
 
     @Override
-    public void pushMessage(Long channelId, String userId, String message) {
+    public void pushMessage(Long channelId, String userId, String deviceTypeStr, String message) {
         try {
             // 创建请求类对象
             PushUnicastMessageRequest request = new PushUnicastMessageRequest();
-            if (requestDeviceType != DeviceType.ALL) {
-                request.setDeviceType(requestDeviceType.ordinal()); // device_type => 1: web 2: pc 3:android
-                // 4:ios 5:wp
+
+            for (DeviceType deviceType : DeviceType.values()) {
+                if (deviceType.toString().equalsIgnoreCase(deviceTypeStr)) {
+                    request.setDeviceType(deviceType.ordinal()); // device_type => 1: web 2: pc 3:android
+                    // 4:ios 5:wp
+                    break;
+                }
             }
 
             request.setChannelId(channelId);
@@ -86,13 +80,16 @@ public class BaiduYunServiceImpl implements BaiduYunService {
     }
 
     @Override
-    public void pushTagMessage(String tagName, String message) {
+    public void pushTagMessage(String tagName, String deviceTypeStr, String message) {
         try {
             // 创建请求类对象
             PushTagMessageRequest request = new PushTagMessageRequest();
-            if (requestDeviceType != DeviceType.ALL) {
-                request.setDeviceType(requestDeviceType.ordinal()); // device_type => 1: web 2: pc 3:android
-                // 4:ios 5:wp
+            for (DeviceType deviceType : DeviceType.values()) {
+                if (deviceType.toString().equalsIgnoreCase(deviceTypeStr)) {
+                    request.setDeviceType(deviceType.ordinal()); // device_type => 1: web 2: pc 3:android
+                    // 4:ios 5:wp
+                    break;
+                }
             }
             request.setTagName(tagName);
             request.setMessage(message);

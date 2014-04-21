@@ -1,5 +1,6 @@
 package org.daybreak.openfire.plugin.bridge.model;
 
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -13,12 +14,6 @@ import java.util.List;
 public class User implements Serializable {
 
     private String id;
-
-    @JsonProperty("channel_id")
-    private Long channelId = 3514649928018607252L;
-
-    @JsonProperty("baidu_user_id")
-    private String baiduUserId = "1125670498307356435";
 
     private String username;
 
@@ -66,22 +61,6 @@ public class User implements Serializable {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public Long getChannelId() {
-        return channelId;
-    }
-
-    public void setChannelId(Long channelId) {
-        this.channelId = channelId;
-    }
-
-    public String getBaiduUserId() {
-        return baiduUserId;
-    }
-
-    public void setBaiduUserId(String baiduUserId) {
-        this.baiduUserId = baiduUserId;
     }
 
     public String getUsername() {
@@ -218,6 +197,10 @@ public class User implements Serializable {
 
     public void setCircleId(String circleId) {
         this.circleId = circleId;
+    }
+
+    public String getNickname() {
+        return getUsername() + (StringUtils.isBlank(getName()) ? "" : "(" + getName() + ")");
     }
 
     @Override

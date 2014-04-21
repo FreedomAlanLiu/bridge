@@ -45,9 +45,7 @@ public class BridgeUserProvider implements UserProvider {
                 if (bridgeUser == null) {
                     throw new UserNotFoundException();
                 }
-                return new User(bridgeUser.getId(),
-                        bridgeUser.getUsername() + (StringUtils.isBlank(bridgeUser.getName()) ? "" : "(" + bridgeUser.getName() + ")"),
-                        bridgeUser.getEmail(), new Date(), new Date());
+                return new User(bridgeUser.getId(), bridgeUser.getNickname(), bridgeUser.getEmail(), new Date(), new Date());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

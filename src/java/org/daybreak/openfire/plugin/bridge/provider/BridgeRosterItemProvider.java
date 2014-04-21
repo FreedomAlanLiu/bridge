@@ -81,7 +81,7 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
                             RosterItem.SubType.getTypeFromInt(3),
                             RosterItem.AskType.getTypeFromInt(-1),
                             RosterItem.RecvType.getTypeFromInt(-1),
-                            connection.getUsername() + (StringUtils.isBlank(connection.getName()) ? "" : "(" + connection.getName() + ")"),
+                            connection.getNickname(),
                             null
                     );
                     // Add the loaded RosterItem (ie. user contact) to the result
@@ -119,7 +119,7 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
                             String nickname = jid.getNode();
                             org.daybreak.openfire.plugin.bridge.model.User u = bridgeService.findUser(jid.getNode(), token);
                             if (u != null) {
-                                nickname = u.getUsername() + (StringUtils.isBlank(u.getName()) ? "" : "(" + u.getName() + ")");
+                                nickname = u.getNickname();
                             }
                             List<String> groupNameList = new ArrayList<String>();
                             groupNameList.add(group.getName());

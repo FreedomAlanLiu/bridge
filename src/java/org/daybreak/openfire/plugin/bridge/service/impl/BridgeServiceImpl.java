@@ -5,6 +5,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 import org.daybreak.openfire.plugin.bridge.BridgePlugin;
+import org.daybreak.openfire.plugin.bridge.model.Device;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
 import org.daybreak.openfire.plugin.bridge.exception.BridgeException;
 import org.daybreak.openfire.plugin.bridge.model.AccessToken;
@@ -153,5 +154,18 @@ public class BridgeServiceImpl implements BridgeService {
             }
         }
         return null;
+    }
+
+    @Override
+    public Device findDevice(String token) throws Exception {
+        List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
+        tokenParameters.add(new BasicNameValuePair("access_token", token));
+        Device device = mapper.readValue(
+                HttpConnectionManager.getHttpRequestAsString("http://"
+                        + BridgePlugin.BRIDGE_HOST
+                        + "/api/v1/user/devices", tokenParameters),
+                Device.class
+        );
+        return device;
     }
 }

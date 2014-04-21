@@ -1,5 +1,6 @@
 package org.daybreak.openfire.plugin.bridge.service;
 
+import org.daybreak.openfire.plugin.bridge.model.Device;
 import org.daybreak.openfire.plugin.bridge.model.Group;
 import org.daybreak.openfire.plugin.bridge.model.Membership;
 import org.daybreak.openfire.plugin.bridge.model.User;
@@ -28,4 +29,6 @@ public interface BridgeService {
     public User loadUser(String userId);
 
     public String getOneToken();
+
+    public Device findDevice(String token) throws Exception;
 }
