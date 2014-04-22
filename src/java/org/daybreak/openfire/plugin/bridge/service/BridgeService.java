@@ -5,6 +5,7 @@ import org.daybreak.openfire.plugin.bridge.model.Group;
 import org.daybreak.openfire.plugin.bridge.model.Membership;
 import org.daybreak.openfire.plugin.bridge.model.User;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -28,7 +29,11 @@ public interface BridgeService {
 
     public User loadUser(String userId);
 
+    public User getUser(String userId);
+
     public String getOneToken();
 
-    public Device findDevice(String token) throws Exception;
+    public List<Device> findDevice(String token) throws Exception;
+
+    public String toJson(Object o) throws IOException;
 }

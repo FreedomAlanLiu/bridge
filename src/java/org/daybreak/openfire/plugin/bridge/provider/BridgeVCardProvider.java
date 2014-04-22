@@ -32,15 +32,9 @@ public class BridgeVCardProvider implements VCardProvider {
     @Override
     public Element loadVCard(String userId) {
         BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
-        User bridgeUser = bridgeService.loadUser(userId);
+        User bridgeUser = bridgeService.getUser(userId);
         if (bridgeUser == null) {
-            String token = bridgeService.getOneToken();
-            try {
-                bridgeUser = bridgeService.findUser(userId, token);
-            } catch (Exception e) {
-                logger.error("user finding error", e);
-                throw new RuntimeException(e);
-            }
+            throw new RuntimeException("Not find the user!");
         }
 
         VCard vard = new VCard();

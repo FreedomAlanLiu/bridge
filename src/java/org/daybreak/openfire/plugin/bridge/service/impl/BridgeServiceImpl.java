@@ -2,6 +2,7 @@ package org.daybreak.openfire.plugin.bridge.service.impl;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 import org.daybreak.openfire.plugin.bridge.BridgePlugin;
@@ -16,6 +17,7 @@ import org.jivesoftware.util.cache.Cache;
 import org.jivesoftware.util.cache.CacheFactory;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -145,6 +147,21 @@ public class BridgeServiceImpl implements BridgeService {
     }
 
     @Override
+    public User getUser(String userId) {
+        User user = loadUser(userId);
+        if (user == null) {
+            String token = getOneToken();
+            if (token != null) {
+                try {
+                    user = findUser(userId, token);
+                } catch (Exception e) {
+                }
+            }
+        }
+        return user;
+    }
+
+    @Override
     public String getOneToken() {
         Iterator<User> userIterator = idUserCache.values().iterator();
         while (userIterator.hasNext()) {
@@ -157,15 +174,17 @@ public class BridgeServiceImpl implements BridgeService {
     }
 
     @Override
-    public Device findDevice(String token) throws Exception {
-        List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
-        tokenParameters.add(new BasicNameValuePair("access_token", token));
-        Device device = mapper.readValue(
+    public List<Device> findDevice(String userId) throws Exception {
+        List<Device> devices = mapper.readValue(
                 HttpConnectionManager.getHttpRequestAsString("http://"
                         + BridgePlugin.BRIDGE_HOST
-                        + "/api/v1/user/devices", tokenParameters),
-                Device.class
+                        + "/api/v1/user/" +  userId + "/devices", null),
+                getCollectionType(List.class, Device.class)
         );
-        return device;
+        return devices;
+    }
+
+    public String toJson(Object o) throws IOException {
+        return mapper.writeValueAsString(o);
     }
 }
