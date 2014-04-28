@@ -20,6 +20,8 @@ public class Article implements Serializable {
 
     private String message;
 
+    private Aps aps;
+
     public String getType() {
         return type;
     }
@@ -50,5 +52,47 @@ public class Article implements Serializable {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Aps getAps() {
+        return aps;
+    }
+
+    public void setAps(Aps aps) {
+        this.aps = aps;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public class Aps implements Serializable {
+
+        private String alert = "Message From Baidu Push";
+
+        private String sound = "";
+
+        private String badge = "0";
+
+        public String getAlert() {
+            return alert;
+        }
+
+        public void setAlert(String alert) {
+            this.alert = alert;
+        }
+
+        public String getSound() {
+            return sound;
+        }
+
+        public void setSound(String sound) {
+            this.sound = sound;
+        }
+
+        public String getBadge() {
+            return badge;
+        }
+
+        public void setBadge(String badge) {
+            this.badge = badge;
+        }
     }
 }

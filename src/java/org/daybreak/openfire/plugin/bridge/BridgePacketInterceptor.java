@@ -47,10 +47,16 @@ public class BridgePacketInterceptor implements PacketInterceptor {
 
             Article article = new Article();
             article.setMessage(messageBody);
+            Article.Aps aps = article.new Aps();
+            aps.setAlert(messageBody);
+            article.setAps(aps);
 
             String prefix = JiveGlobals.getProperty("plugin.broadcast.messagePrefix", "(broadcast)");
             if (XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(toJID.getDomain())) {
                 if (messageBody.startsWith(prefix)) {
+                    return;
+                }
+                if (fromJID == null) {
                     return;
                 }
                 User fromUser = bridgeService.getUser(fromJID.getNode());
@@ -84,6 +90,7 @@ public class BridgePacketInterceptor implements PacketInterceptor {
                 String groupId = msg.substring(0, gidEndIndex).trim();
                 msg = msg.substring(gidEndIndex + 5);
                 article.setMessage(msg);
+                article.getAps().setAlert(msg);
                 try {
                     article.setFrom(groupId);
                     article.setMessageType(MessageType.broadcast.toString());

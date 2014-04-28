@@ -175,6 +175,9 @@ public class HttpConnectionManager {
      */
     public static String getHttpRequestAsString(String url, List<NameValuePair> parameters) throws IOException {
         HttpResponse response = getHttpRequest(url, parameters);
+        if (response.getStatusLine().getStatusCode() != 200) {
+            throw new IOException("Get url " + url + ": " + response.getStatusLine().getStatusCode());
+        }
         HttpEntity entity = response.getEntity();
         String responseContent = readContentFromEntity(entity);
         Log.debug("GET: " + url);
@@ -271,6 +274,9 @@ public class HttpConnectionManager {
      */
     public static String postHttpRequestAsString(String url, List<NameValuePair> parameters) throws IOException {
         HttpResponse response = postHttpRequest(url, parameters);
+        if (response.getStatusLine().getStatusCode() != 200) {
+            throw new IOException("Post url " + url + ": " + response.getStatusLine().getStatusCode());
+        }
         HttpEntity entity = response.getEntity();
         String responseContent = readContentFromEntity(entity);
         Log.debug("POST: " + url);
