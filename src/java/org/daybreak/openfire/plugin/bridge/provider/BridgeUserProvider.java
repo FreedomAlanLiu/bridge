@@ -21,7 +21,7 @@ public class BridgeUserProvider implements UserProvider {
 
     @Override
     public User loadUser(String userId) throws UserNotFoundException {
-        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");;
+        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
         String token = bridgeService.getToken(userId);
         try {
             if (StringUtils.isNotEmpty(token)) {

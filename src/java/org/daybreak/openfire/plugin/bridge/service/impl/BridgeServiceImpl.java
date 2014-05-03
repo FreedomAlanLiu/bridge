@@ -37,94 +37,124 @@ public class BridgeServiceImpl implements BridgeService {
 
     @Override
     public List<User> findConnections(String token) throws Exception {
-        List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
-        tokenParameters.add(new BasicNameValuePair("access_token", token));
-        List<User> connections = mapper.readValue(
-                HttpConnectionManager.getHttpRequestAsString("http://"
-                        + BridgePlugin.BRIDGE_HOST
-                        + "/api/v1/user/connections", tokenParameters),
-                getCollectionType(List.class, User.class)
-        );
-        return connections;
+        HttpConnectionManager httpConnectionManager = new HttpConnectionManager();
+        try {
+            List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
+            tokenParameters.add(new BasicNameValuePair("access_token", token));
+            List<User> connections = mapper.readValue(
+                    httpConnectionManager.getHttpRequestAsString("http://"
+                            + BridgePlugin.BRIDGE_HOST
+                            + "/api/v1/user/connections", tokenParameters),
+                    getCollectionType(List.class, User.class)
+            );
+            return connections;
+        } finally {
+            httpConnectionManager.close();
+        }
     }
 
     @Override
     public List<Membership> findUserMemberships(String token) throws Exception {
-        List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
-        tokenParameters.add(new BasicNameValuePair("access_token", token));
-        List<Membership> memberships = mapper.readValue(
-                HttpConnectionManager.getHttpRequestAsString("http://"
-                        + BridgePlugin.BRIDGE_HOST
-                        + "/api/v1/user/memberships", tokenParameters),
-                getCollectionType(List.class, Membership.class)
-        );
-        return memberships;
+        HttpConnectionManager httpConnectionManager = new HttpConnectionManager();
+        try {
+            List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
+            tokenParameters.add(new BasicNameValuePair("access_token", token));
+            List<Membership> memberships = mapper.readValue(
+                    httpConnectionManager.getHttpRequestAsString("http://"
+                            + BridgePlugin.BRIDGE_HOST
+                            + "/api/v1/user/memberships", tokenParameters),
+                    getCollectionType(List.class, Membership.class)
+            );
+            return memberships;
+        } finally {
+            httpConnectionManager.close();
+        }
     }
 
     @Override
     public List<Membership> findGroupMemberships(String groupId, String token) throws Exception {
-        List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
-        tokenParameters.add(new BasicNameValuePair("access_token", token));
-        List<Membership> memberships = mapper.readValue(
-                HttpConnectionManager.getHttpRequestAsString("http://"
-                        + BridgePlugin.BRIDGE_HOST
-                        + "/api/v1/groups/" + groupId + "/memberships", tokenParameters),
-                getCollectionType(List.class, Membership.class)
-        );
-        return memberships;
+        HttpConnectionManager httpConnectionManager = new HttpConnectionManager();
+        try {
+            List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
+            tokenParameters.add(new BasicNameValuePair("access_token", token));
+            List<Membership> memberships = mapper.readValue(
+                    httpConnectionManager.getHttpRequestAsString("http://"
+                            + BridgePlugin.BRIDGE_HOST
+                            + "/api/v1/groups/" + groupId + "/memberships", tokenParameters),
+                    getCollectionType(List.class, Membership.class)
+            );
+            return memberships;
+        } finally {
+            httpConnectionManager.close();
+        }
     }
 
     @Override
     public User findUser(String token) throws Exception {
-        List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
-        tokenParameters.add(new BasicNameValuePair("access_token", token));
-        User user = mapper.readValue(
-                HttpConnectionManager.getHttpRequestAsString("http://"
-                        + BridgePlugin.BRIDGE_HOST
-                        + "/api/v1/user", tokenParameters),
-                User.class
-        );
-        user.setAccessToken(token);
-        idUserCache.put(user.getId(), user);
-        return user;
+        HttpConnectionManager httpConnectionManager = new HttpConnectionManager();
+        try {
+            List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
+            tokenParameters.add(new BasicNameValuePair("access_token", token));
+            User user = mapper.readValue(
+                    httpConnectionManager.getHttpRequestAsString("http://"
+                            + BridgePlugin.BRIDGE_HOST
+                            + "/api/v1/user", tokenParameters),
+                    User.class
+            );
+            user.setAccessToken(token);
+            idUserCache.put(user.getId(), user);
+            return user;
+        } finally {
+            httpConnectionManager.close();
+        }
     }
 
     @Override
     public User findUser(String id, String token) throws Exception {
-        List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
-        tokenParameters.add(new BasicNameValuePair("access_token", token));
-        User user = mapper.readValue(
-                HttpConnectionManager.getHttpRequestAsString("http://"
-                        + BridgePlugin.BRIDGE_HOST
-                        + "/api/v1/users/" + id, tokenParameters),
-                User.class
-        );
-        idUserCache.put(user.getId(), user);
-        return user;
+        HttpConnectionManager httpConnectionManager = new HttpConnectionManager();
+        try {
+            List<NameValuePair> tokenParameters = new ArrayList<NameValuePair>();
+            tokenParameters.add(new BasicNameValuePair("access_token", token));
+            User user = mapper.readValue(
+                    httpConnectionManager.getHttpRequestAsString("http://"
+                            + BridgePlugin.BRIDGE_HOST
+                            + "/api/v1/users/" + id, tokenParameters),
+                    User.class
+            );
+            idUserCache.put(user.getId(), user);
+            return user;
+        } finally {
+            httpConnectionManager.close();
+        }
     }
 
     @Override
     public String auth(String userId, String password) throws Exception {
-        List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-        parameters.add(new BasicNameValuePair("grant_type", "password"));
-        parameters.add(new BasicNameValuePair("user_id", userId));
-        parameters.add(new BasicNameValuePair("password", password));
-        parameters.add(new BasicNameValuePair("client_id", "325183e9e2aa1c054f10885b47a1663db43b65ce972e2004886f91e386cfcd3f"));
-        parameters.add(new BasicNameValuePair("client_secret", "94d835eec88320e95026596ce4c2db4f552368af2dd5f35e39c28dec903b814c"));
-        String response = HttpConnectionManager.postHttpRequestAsString("http://"
-                + BridgePlugin.BRIDGE_HOST
-                + "/tokens", parameters);
-        AccessToken accessToken = mapper.readValue(response, AccessToken.class);
-        if (accessToken != null && accessToken.getAccessToken() != null) {
-            User user = loadUser(userId);
-            if (user == null) {
-                user = new User();
+        HttpConnectionManager httpConnectionManager = new HttpConnectionManager();
+        try {
+            List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+            parameters.add(new BasicNameValuePair("grant_type", "password"));
+            parameters.add(new BasicNameValuePair("user_id", userId));
+            parameters.add(new BasicNameValuePair("password", password));
+            parameters.add(new BasicNameValuePair("client_id", "325183e9e2aa1c054f10885b47a1663db43b65ce972e2004886f91e386cfcd3f"));
+            parameters.add(new BasicNameValuePair("client_secret", "94d835eec88320e95026596ce4c2db4f552368af2dd5f35e39c28dec903b814c"));
+            String response = httpConnectionManager.postHttpRequestAsString("http://"
+                    + BridgePlugin.BRIDGE_HOST
+                    + "/tokens", parameters);
+            AccessToken accessToken = mapper.readValue(response, AccessToken.class);
+            if (accessToken != null && accessToken.getAccessToken() != null) {
+                User user = loadUser(userId);
+                if (user == null) {
+                    user = new User();
+                }
+                user.setAccessToken(accessToken.getAccessToken());
+                idUserCache.put(userId, user);
+                return accessToken.getAccessToken();
+            } else {
+                throw new BridgeException(accessToken.getError(), accessToken.getErrorDescription());
             }
-            user.setAccessToken(accessToken.getAccessToken());
-            idUserCache.put(userId, user);
-            return accessToken.getAccessToken();
-        } else {
-            throw new BridgeException(accessToken.getError(), accessToken.getErrorDescription());
+        } finally {
+            httpConnectionManager.close();
         }
     }
 
@@ -175,13 +205,18 @@ public class BridgeServiceImpl implements BridgeService {
 
     @Override
     public List<Device> findDevice(String userId) throws Exception {
-        List<Device> devices = mapper.readValue(
-                HttpConnectionManager.getHttpRequestAsString("http://"
-                        + BridgePlugin.BRIDGE_HOST
-                        + "/api/v1/user/" +  userId + "/devices", null),
-                getCollectionType(List.class, Device.class)
-        );
-        return devices;
+        HttpConnectionManager httpConnectionManager = new HttpConnectionManager();
+        try {
+            List<Device> devices = mapper.readValue(
+                    httpConnectionManager.getHttpRequestAsString("http://"
+                            + BridgePlugin.BRIDGE_HOST
+                            + "/api/v1/user/" + userId + "/devices", null),
+                    getCollectionType(List.class, Device.class)
+            );
+            return devices;
+        } finally {
+            httpConnectionManager.close();
+        }
     }
 
     public String toJson(Object o) throws IOException {

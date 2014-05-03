@@ -51,8 +51,14 @@ public class BaiduYunServiceImpl implements BaiduYunService {
 
             for (DeviceType deviceType : DeviceType.values()) {
                 if (deviceType.toString().equalsIgnoreCase(deviceTypeStr)) {
-                    request.setDeviceType(deviceType.ordinal()); // device_type => 1: web 2: pc 3:android
-                    // 4:ios 5:wp
+                    if (deviceType == DeviceType.IOS) {
+                        // 设备为ios的时候设置开发模式
+                        request.setDeployStatus(1);
+                        // 设备为ios的时候消息类型为notification
+                        request.setMessageType(1);
+                    }
+                    // device_type => 1: web 2: pc 3:android 4:ios 5:wp
+                    request.setDeviceType(deviceType.ordinal());
                     break;
                 }
             }
@@ -86,17 +92,19 @@ public class BaiduYunServiceImpl implements BaiduYunService {
             PushTagMessageRequest request = new PushTagMessageRequest();
             for (DeviceType deviceType : DeviceType.values()) {
                 if (deviceType.toString().equalsIgnoreCase(deviceTypeStr)) {
-                    request.setDeviceType(deviceType.ordinal()); // device_type => 1: web 2: pc 3:android
-                    // 4:ios 5:wp
+                    if (deviceType == DeviceType.IOS) {
+                        // 设备为ios的时候设置开发模式
+                        request.setDeployStatus(1);
+                        // 设备为ios的时候消息类型为notification
+                        request.setMessageType(1);
+                    }
+                    // device_type => 1: web 2: pc 3:android 4:ios 5:wp
+                    request.setDeviceType(deviceType.ordinal());
                     break;
                 }
             }
             request.setTagName(tagName);
             request.setMessage(message);
-
-            // 若要通知，
-            // request.setMessageType(1);
-            // request.setMessage("{\"title\":\"Notify_title_danbo\",\"description\":\"Notify_description_content\"}");
 
             // 调用pushMessage接口
             PushTagMessageResponse response = channelClient

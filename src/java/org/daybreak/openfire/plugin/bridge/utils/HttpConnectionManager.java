@@ -41,7 +41,7 @@ import java.util.List;
 public class HttpConnectionManager {
 
     // 连接池里的最大连接数 
-    public static final int MAX_TOTAL_CONNECTIONS = 100;
+    public static final int MAX_TOTAL_CONNECTIONS = 200;
 
     // 每个路由的默认最大连接数  
     public static final int MAX_ROUTE_CONNECTIONS = 50;
@@ -58,11 +58,10 @@ public class HttpConnectionManager {
     // http线程池管理器
     private static final PoolingHttpClientConnectionManager connection_manager;
 
-    // http客户端
-    private static CloseableHttpClient httpClient;
+    private static HttpClientBuilder http_client_builder;
 
-    // HTTP头
-    public static String HEAD_X_REQUESTED_WITH = "X-Requested-With";
+    // http客户端
+    private CloseableHttpClient httpClient;
 
     private static final Logger Log = LoggerFactory.getLogger(HttpConnectionManager.class);
 
@@ -101,9 +100,9 @@ public class HttpConnectionManager {
         connection_manager.setMaxTotal(MAX_TOTAL_CONNECTIONS);
         connection_manager.setDefaultMaxPerRoute(MAX_ROUTE_CONNECTIONS);
 
-        HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManager(connection_manager);
-        httpClientBuilder.setUserAgent("Mozilla/5.0 (Windows NT 5.1; rv:26.0) Gecko/20100101 Firefox/26.0");
-        httpClientBuilder.addInterceptorFirst(new HttpRequestInterceptor() {
+        http_client_builder = HttpClients.custom();
+        http_client_builder.setUserAgent("Mozilla/5.0 (Windows NT 5.1; rv:26.0) Gecko/20100101 Firefox/26.0");
+        http_client_builder.addInterceptorFirst(new HttpRequestInterceptor() {
             @Override
             public void process(
                     final HttpRequest request,
@@ -114,9 +113,12 @@ public class HttpConnectionManager {
             }
         });
         SocketConfig socketConfig = SocketConfig.custom().setSoKeepAlive(true).setTcpNoDelay(true).build();
-        httpClientBuilder.setDefaultSocketConfig(socketConfig);
-        httpClientBuilder.setRetryHandler(new DefaultHttpRequestRetryHandler(5, true));
-        httpClient = httpClientBuilder.build();
+        http_client_builder.setDefaultSocketConfig(socketConfig);
+        http_client_builder.setRetryHandler(new DefaultHttpRequestRetryHandler(5, true));
+    }
+
+    public HttpConnectionManager() {
+        httpClient = http_client_builder.build();
     }
 
     /**
@@ -126,7 +128,7 @@ public class HttpConnectionManager {
      * @param parameters
      * @return
      */
-    public static HttpResponse getHttpRequest(String url, List<NameValuePair> parameters) throws IOException {
+    public HttpResponse getHttpRequest(String url, List<NameValuePair> parameters) throws IOException {
         Log.debug("------------------------------------------------------------------------");
         if (parameters != null && parameters.size() > 0) {
             String paramURL = URLEncodedUtils.format(parameters, HTTP.UTF_8);
@@ -173,7 +175,7 @@ public class HttpConnectionManager {
      * @param parameters
      * @return
      */
-    public static String getHttpRequestAsString(String url, List<NameValuePair> parameters) throws IOException {
+    public String getHttpRequestAsString(String url, List<NameValuePair> parameters) throws IOException {
         HttpResponse response = getHttpRequest(url, parameters);
         if (response.getStatusLine().getStatusCode() != 200) {
             throw new IOException("Get url " + url + ": " + response.getStatusLine().getStatusCode());
@@ -197,7 +199,7 @@ public class HttpConnectionManager {
      * @return
      * @throws java.io.UnsupportedEncodingException
      */
-    public static HttpPost createHttpPost(String url, List<NameValuePair> parameters) throws IOException {
+    public HttpPost createHttpPost(String url, List<NameValuePair> parameters) throws IOException {
 
         HttpPost httpPost = new HttpPost(url);
 
@@ -222,7 +224,7 @@ public class HttpConnectionManager {
      * @return
      * @throws java.io.IOException
      */
-    public static String readStringFromInputStream(InputStream is) throws IOException {
+    public String readStringFromInputStream(InputStream is) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         int i = -1;
         while ((i = is.read()) != -1) {
@@ -238,7 +240,7 @@ public class HttpConnectionManager {
      * @param parameters
      * @return
      */
-    public static HttpResponse postHttpRequest(String url, List<NameValuePair> parameters) throws IOException {
+    public HttpResponse postHttpRequest(String url, List<NameValuePair> parameters) throws IOException {
         Log.debug("------------------------------------------------------------------------");
         Log.debug("POST URL: " + url);
 
@@ -272,7 +274,7 @@ public class HttpConnectionManager {
      * @param parameters
      * @return
      */
-    public static String postHttpRequestAsString(String url, List<NameValuePair> parameters) throws IOException {
+    public String postHttpRequestAsString(String url, List<NameValuePair> parameters) throws IOException {
         HttpResponse response = postHttpRequest(url, parameters);
         if (response.getStatusLine().getStatusCode() != 200) {
             throw new IOException("Post url " + url + ": " + response.getStatusLine().getStatusCode());
@@ -296,7 +298,7 @@ public class HttpConnectionManager {
      * @throws org.apache.http.ParseException
      * @throws java.io.IOException
      */
-    public static String readContentFromEntity(HttpEntity httpEntity) throws ParseException, IOException {
+    public String readContentFromEntity(HttpEntity httpEntity) throws ParseException, IOException {
         String html;
         Header header = httpEntity.getContentEncoding();
         if (header != null && "gzip".equals(header.getValue())) {
@@ -305,5 +307,11 @@ public class HttpConnectionManager {
             html = EntityUtils.toString(httpEntity);
         }
         return html;
+    }
+
+    public void close() throws IOException {
+        if (httpClient != null) {
+            httpClient.close();
+        }
     }
 }

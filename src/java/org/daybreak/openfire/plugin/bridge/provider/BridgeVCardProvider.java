@@ -43,8 +43,9 @@ public class BridgeVCardProvider implements VCardProvider {
 
         BufferedInputStream in = null;
         ByteArrayOutputStream out = null;
+        HttpConnectionManager httpConnectionManager = new HttpConnectionManager();
         try {
-            HttpResponse response = HttpConnectionManager.getHttpRequest("http://" + BridgePlugin.BRIDGE_HOST + bridgeUser.getAvatarUrl(), null);
+            HttpResponse response = httpConnectionManager.getHttpRequest("http://" + BridgePlugin.BRIDGE_HOST + bridgeUser.getAvatarUrl(), null);
             HttpEntity entity = response.getEntity();
             in = new BufferedInputStream((entity.getContent()));
             out = new ByteArrayOutputStream();
@@ -68,6 +69,10 @@ public class BridgeVCardProvider implements VCardProvider {
                     out.close();
                 } catch (IOException e) {
                 }
+            }
+            try {
+                httpConnectionManager.close();
+            } catch (IOException e) {
             }
         }
 
