@@ -45,10 +45,17 @@ public class BridgePacketInterceptor implements PacketInterceptor {
             BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
             BaiduYunService baiduYunService = (BaiduYunService) BridgeServiceFactory.getBean("baiduYunService");
 
+            if (fromJID == null) {
+                return;
+            }
+            User fromUser = bridgeService.getUser(fromJID.getNode());
+            if (fromUser == null) {
+                return;
+            }
+
             Article article = new Article();
             article.setMessage(messageBody);
             Article.Aps aps = article.new Aps();
-            aps.setAlert(messageBody);
             article.setAps(aps);
 
             String prefix = JiveGlobals.getProperty("plugin.broadcast.messagePrefix", "(broadcast)");
@@ -56,18 +63,12 @@ public class BridgePacketInterceptor implements PacketInterceptor {
                 if (messageBody.startsWith(prefix)) {
                     return;
                 }
-                if (fromJID == null) {
-                    return;
-                }
-                User fromUser = bridgeService.getUser(fromJID.getNode());
-                if (fromUser == null) {
-                    return;
-                }
                 User toUser = bridgeService.getUser(toJID.getNode());
                 if (toUser == null) {
                     return;
                 }
                 try {
+                    article.getAps().setAlert(fromUser.getName() + "：" + messageBody);
                     article.setFrom(fromJID.getNode());
                     article.setMessageType(MessageType.friend.toString());
                     List<Device> devices = bridgeService.findDevice(toUser.getId());
@@ -90,7 +91,7 @@ public class BridgePacketInterceptor implements PacketInterceptor {
                 String groupId = msg.substring(0, gidEndIndex).trim();
                 msg = msg.substring(gidEndIndex + 5);
                 article.setMessage(msg);
-                article.getAps().setAlert(msg);
+                article.getAps().setAlert(fromUser.getName() + "：" + msg);
                 try {
                     article.setFrom(groupId);
                     article.setMessageType(MessageType.broadcast.toString());
