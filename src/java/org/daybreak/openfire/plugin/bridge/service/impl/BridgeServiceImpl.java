@@ -18,9 +18,7 @@ import org.jivesoftware.util.cache.CacheFactory;
 
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Alan on 2014/3/31.
@@ -29,10 +27,11 @@ public class BridgeServiceImpl implements BridgeService {
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    private Cache<String, User> idUserCache;
+    // 此cache目前作为永久性的cache而存在，考虑使用第三方缓存数据库（如redis）来存储
+    private Map<String, User> idUserCache;
 
     public BridgeServiceImpl() {
-        idUserCache = CacheFactory.createCache("BridgeUsernameToken");
+        idUserCache = new HashMap<String, User>();
     }
 
     @Override
