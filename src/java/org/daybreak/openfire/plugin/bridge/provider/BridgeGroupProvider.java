@@ -23,10 +23,10 @@ public class BridgeGroupProvider extends AbstractGroupProvider {
     public Group getGroup(String name) throws GroupNotFoundException {
         Collection<JID> members = new ArrayList<JID>();
         Collection<JID> administrators = new ArrayList<JID>();
-        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");;
-        String token = bridgeService.getOneToken();
-        if (StringUtils.isNotEmpty(token)) {
-            try {
+        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
+        try {
+            String token = bridgeService.getOneToken();
+            if (StringUtils.isNotEmpty(token)) {
                 List<Membership> memberships = bridgeService.findGroupMemberships(name, token);
                 for (Membership membership : memberships) {
                     JID jid = new JID(membership.getUser().getId()
@@ -34,9 +34,9 @@ public class BridgeGroupProvider extends AbstractGroupProvider {
                     members.add(jid);
                 }
                 return new Group(name, "", members, administrators);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         throw new GroupNotFoundException();
     }
@@ -59,9 +59,9 @@ public class BridgeGroupProvider extends AbstractGroupProvider {
     @Override
     public Collection<String> getGroupNames(JID user) {
         List<String> groupNames = new ArrayList<String>();
-        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");;
-        String token = bridgeService.getToken(user.getNode());
+        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
         try {
+            String token = bridgeService.getToken(user.getNode());
             List<Membership> membershipList = bridgeService.findUserMemberships(token);
             for (Membership membership : membershipList) {
                 org.daybreak.openfire.plugin.bridge.model.Group bridgeGroup = membership.getGroup();

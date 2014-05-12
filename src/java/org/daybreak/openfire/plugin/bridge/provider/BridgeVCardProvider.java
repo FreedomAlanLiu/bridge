@@ -31,20 +31,21 @@ public class BridgeVCardProvider implements VCardProvider {
 
     @Override
     public Element loadVCard(String userId) {
-        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
-        User bridgeUser = bridgeService.getUser(userId);
-        if (bridgeUser == null) {
-            throw new RuntimeException("Not find the user!");
-        }
-
         VCard vard = new VCard();
-        vard.setNickName(bridgeUser.getUsername() + (bridgeUser.getName() == null ? "" : "(" + bridgeUser.getName() + ")"));
-        vard.setEmailHome(bridgeUser.getEmail());
 
+        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
         BufferedInputStream in = null;
         ByteArrayOutputStream out = null;
         HttpConnectionManager httpConnectionManager = new HttpConnectionManager();
         try {
+            User bridgeUser = bridgeService.getUser(userId);
+            if (bridgeUser == null) {
+                throw new RuntimeException("Not find the user!");
+            }
+
+            vard.setNickName(bridgeUser.getUsername() + (bridgeUser.getName() == null ? "" : "(" + bridgeUser.getName() + ")"));
+            vard.setEmailHome(bridgeUser.getEmail());
+
             HttpResponse response = httpConnectionManager.getHttpRequest("http://" + BridgePlugin.BRIDGE_HOST + bridgeUser.getAvatarUrl(), null);
             HttpEntity entity = response.getEntity();
             in = new BufferedInputStream((entity.getContent()));
@@ -55,24 +56,27 @@ public class BridgeVCardProvider implements VCardProvider {
                 b = in.read();
             }
             vard.setAvatar(out.toByteArray());
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("avatar setting error", e);
         } finally {
             if (in != null) {
                 try {
                     in.close();
                 } catch (IOException e) {
+                    logger.warn(e.getMessage());
                 }
             }
             if (out != null) {
                 try {
                     out.close();
                 } catch (IOException e) {
+                    logger.warn(e.getMessage());
                 }
             }
             try {
                 httpConnectionManager.close();
             } catch (IOException e) {
+                logger.warn(e.getMessage());
             }
         }
 

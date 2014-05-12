@@ -22,34 +22,34 @@ public class BridgeUserProvider implements UserProvider {
     @Override
     public User loadUser(String userId) throws UserNotFoundException {
         BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
-        String token = bridgeService.getToken(userId);
+        org.daybreak.openfire.plugin.bridge.model.User bridgeUser = null;
         try {
+            String token = bridgeService.getToken(userId);
             if (StringUtils.isNotEmpty(token)) {
-                org.daybreak.openfire.plugin.bridge.model.User bridgeUser = bridgeService.findUser(token);
-                if (bridgeUser == null) {
-                    throw new UserNotFoundException();
-                }
+                bridgeUser = bridgeService.findUser(token);
+                /*
+                Roster缓存可以进行配置，将其存在的时间缩短
+                如果不需要此缓存，可以设置最大数量和生存时间为-1
+
                 // 擦除对应的Roster缓存
                 Cache rosterCache = CacheFactory.createCache("Roster");
-                rosterCache.remove(bridgeUser.getId());
-                return new User(bridgeUser.getId(),
-                        bridgeUser.getUsername() + (StringUtils.isBlank(bridgeUser.getName()) ? "" : "(" + bridgeUser.getName() + ")"),
-                        bridgeUser.getEmail(), new Date(), new Date());
-
+                rosterCache.remove(bridgeUser.getId());*/
             } else {
                 token = bridgeService.getOneToken();
-                if (StringUtils.isEmpty(token)) {
-                    throw new UserNotFoundException();
+                if (StringUtils.isNotEmpty(token)) {
+                    bridgeUser = bridgeService.findUser(userId, token);
                 }
-                org.daybreak.openfire.plugin.bridge.model.User bridgeUser = bridgeService.findUser(userId, token);
-                if (bridgeUser == null) {
-                    throw new UserNotFoundException();
-                }
-                return new User(bridgeUser.getId(), bridgeUser.getNickname(), bridgeUser.getEmail(), new Date(), new Date());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        if (bridgeUser == null) {
+            throw new UserNotFoundException();
+        }
+        return new User(bridgeUser.getId(),
+                bridgeUser.getUsername() + (StringUtils.isBlank(bridgeUser.getName()) ? "" : "(" + bridgeUser.getName() + ")"),
+                bridgeUser.getEmail(), new Date(), new Date());
     }
 
     @Override

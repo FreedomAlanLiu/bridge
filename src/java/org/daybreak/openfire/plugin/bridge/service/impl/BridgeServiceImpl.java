@@ -2,7 +2,6 @@ package org.daybreak.openfire.plugin.bridge.service.impl;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 import org.daybreak.openfire.plugin.bridge.BridgePlugin;
@@ -13,8 +12,8 @@ import org.daybreak.openfire.plugin.bridge.model.AccessToken;
 import org.daybreak.openfire.plugin.bridge.model.Membership;
 import org.daybreak.openfire.plugin.bridge.model.User;
 import org.daybreak.openfire.plugin.bridge.utils.HttpConnectionManager;
-import org.jivesoftware.util.cache.Cache;
-import org.jivesoftware.util.cache.CacheFactory;
+import org.daybreak.openfire.plugin.bridge.utils.RedisClient;
+import org.daybreak.openfire.plugin.bridge.utils.Storage;
 
 
 import java.io.IOException;
@@ -28,11 +27,11 @@ public class BridgeServiceImpl implements BridgeService {
     private ObjectMapper mapper = new ObjectMapper();
 
     // 此cache目前作为永久性的cache而存在，考虑使用第三方缓存数据库（如redis）来存储
-    private Map<String, User> idUserCache;
+    /*private Map<String, User> idUserCache;
 
     public BridgeServiceImpl() {
         idUserCache = new HashMap<String, User>();
-    }
+    }*/
 
     @Override
     public List<User> findConnections(String token) throws Exception {
@@ -101,7 +100,7 @@ public class BridgeServiceImpl implements BridgeService {
                     User.class
             );
             user.setAccessToken(token);
-            idUserCache.put(user.getId(), user);
+            Storage.getInstance().setUser(user);
             return user;
         } finally {
             httpConnectionManager.close();
@@ -120,7 +119,7 @@ public class BridgeServiceImpl implements BridgeService {
                             + "/api/v1/users/" + id, tokenParameters),
                     User.class
             );
-            idUserCache.put(user.getId(), user);
+            Storage.getInstance().setUser(user);
             return user;
         } finally {
             httpConnectionManager.close();
@@ -145,9 +144,10 @@ public class BridgeServiceImpl implements BridgeService {
                 User user = loadUser(userId);
                 if (user == null) {
                     user = new User();
+                    user.setId(userId);
                 }
                 user.setAccessToken(accessToken.getAccessToken());
-                idUserCache.put(userId, user);
+                Storage.getInstance().setUser(user);
                 return accessToken.getAccessToken();
             } else {
                 throw new BridgeException(accessToken.getError(), accessToken.getErrorDescription());
@@ -162,7 +162,7 @@ public class BridgeServiceImpl implements BridgeService {
     }
 
     @Override
-    public String getToken(String userId) {
+    public String getToken(String userId) throws Exception {
         User user = loadUser(userId);
         if (user == null) {
             return null;
@@ -171,35 +171,25 @@ public class BridgeServiceImpl implements BridgeService {
     }
 
     @Override
-    public User loadUser(String userId) {
-        return idUserCache.get(userId);
+    public User loadUser(String userId) throws Exception {
+        return Storage.getInstance().getUser(userId);
     }
 
     @Override
-    public User getUser(String userId) {
+    public User getUser(String userId) throws Exception {
         User user = loadUser(userId);
         if (user == null) {
             String token = getOneToken();
             if (token != null) {
-                try {
-                    user = findUser(userId, token);
-                } catch (Exception e) {
-                }
+                user = findUser(userId, token);
             }
         }
         return user;
     }
 
     @Override
-    public String getOneToken() {
-        Iterator<User> userIterator = idUserCache.values().iterator();
-        while (userIterator.hasNext()) {
-            String token = userIterator.next().getAccessToken();
-            if (token != null) {
-                return token;
-            }
-        }
-        return null;
+    public String getOneToken() throws Exception {
+        return Storage.getInstance().getOneToken();
     }
 
     @Override

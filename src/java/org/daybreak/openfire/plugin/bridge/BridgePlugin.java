@@ -1,6 +1,8 @@
 package org.daybreak.openfire.plugin.bridge;
 
 import org.daybreak.openfire.plugin.bridge.service.impl.BridgeServiceImpl;
+import org.daybreak.openfire.plugin.bridge.utils.RedisClient;
+import org.daybreak.openfire.plugin.bridge.utils.Storage;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.commands.clearspace.SystemAdminAdded;
 import org.jivesoftware.openfire.container.Plugin;
@@ -14,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.net.UnknownHostException;
 
 /**
  * Created by Alan on 2014/4/2.
@@ -35,6 +38,15 @@ public class BridgePlugin implements Plugin {
         hackRosterItemProvider();
         hackGroupProvider();
         hackVCardProvider();
+
+        // 初始化redis & mongo相关
+        RedisClient.getInstance().initialPool();
+        try {
+            Storage.getInstance().init();
+        } catch (UnknownHostException e) {
+            System.out.println("Un know host error: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
 
         // 添加消息拦截器
         bridgePacketInterceptor = new BridgePacketInterceptor();

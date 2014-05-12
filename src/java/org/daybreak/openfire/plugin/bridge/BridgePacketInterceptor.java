@@ -48,7 +48,11 @@ public class BridgePacketInterceptor implements PacketInterceptor {
             if (fromJID == null) {
                 return;
             }
-            User fromUser = bridgeService.getUser(fromJID.getNode());
+            User fromUser = null;
+            try {
+                fromUser = bridgeService.getUser(fromJID.getNode());
+            } catch (Exception e) {
+            }
             if (fromUser == null) {
                 return;
             }
@@ -63,7 +67,11 @@ public class BridgePacketInterceptor implements PacketInterceptor {
                 if (messageBody.startsWith(prefix)) {
                     return;
                 }
-                User toUser = bridgeService.getUser(toJID.getNode());
+                User toUser = null;
+                try {
+                    toUser = bridgeService.getUser(toJID.getNode());
+                } catch (Exception e) {
+                }
                 if (toUser == null) {
                     return;
                 }

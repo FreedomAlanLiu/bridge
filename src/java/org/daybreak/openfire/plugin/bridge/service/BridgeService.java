@@ -25,13 +25,13 @@ public interface BridgeService {
 
     public List<Membership> findGroupMemberships(String groupId, String token) throws Exception;
 
-    public String getToken(String userId);
+    public String getToken(String userId) throws Exception;
 
-    public User loadUser(String userId);
+    public User loadUser(String userId) throws Exception;
 
-    public User getUser(String userId);
+    public User getUser(String userId) throws Exception;
 
-    public String getOneToken();
+    public String getOneToken() throws Exception;
 
     public List<Device> findDevice(String token) throws Exception;
 

@@ -2,6 +2,7 @@ package org.daybreak.openfire.plugin.bridge.model;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.mongodb.morphia.annotations.Embedded;
 
 import java.io.Serializable;
 
@@ -9,6 +10,7 @@ import java.io.Serializable;
  * Created by Alan on 2014/3/31.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Embedded
 public class Profile implements Serializable {
 
     @JsonProperty("first_name")

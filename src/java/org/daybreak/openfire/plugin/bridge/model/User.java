@@ -3,6 +3,9 @@ package org.daybreak.openfire.plugin.bridge.model;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 
 import java.io.Serializable;
 import java.util.List;
@@ -11,8 +14,10 @@ import java.util.List;
  * Created by Alan on 2014/3/30.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Entity("users")
 public class User implements Serializable {
 
+    @Id
     private String id;
 
     private String username;
@@ -44,13 +49,14 @@ public class User implements Serializable {
 
     private boolean connected;
 
+    @Embedded
     private Profile profile;
 
     private String accessToken;
 
-    private List<User> connections;
+    /*private List<User> connections;
 
-    private List<Membership> memberships;
+    private List<Membership> memberships;*/
 
     @JsonProperty("circle_id")
     private String circleId;
@@ -175,7 +181,7 @@ public class User implements Serializable {
         this.accessToken = accessToken;
     }
 
-    public List<User> getConnections() {
+    /*public List<User> getConnections() {
         return connections;
     }
 
@@ -189,7 +195,7 @@ public class User implements Serializable {
 
     public void setMemberships(List<Membership> memberships) {
         this.memberships = memberships;
-    }
+    }*/
 
     public String getCircleId() {
         return circleId;
