@@ -40,7 +40,7 @@ public class BridgeVCardProvider implements VCardProvider {
         try {
             User bridgeUser = bridgeService.getUser(userId);
             if (bridgeUser == null) {
-                throw new RuntimeException("Not find the user!");
+                throw new RuntimeException("Not found the user!");
             }
 
             vard.setNickName(bridgeUser.getUsername() + (bridgeUser.getName() == null ? "" : "(" + bridgeUser.getName() + ")"));
