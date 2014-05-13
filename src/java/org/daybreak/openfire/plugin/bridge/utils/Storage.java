@@ -5,6 +5,7 @@ import org.daybreak.openfire.plugin.bridge.model.User;
 import org.jivesoftware.util.JiveGlobals;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,8 @@ public class Storage {
                 JiveGlobals.getIntProperty("plugin.bridge.mongo.port", 27017));
         Morphia morphia = new Morphia();
         morphia.map(User.class);
+        Mapper mapper = morphia.getMapper();
+        mapper.getOptions().objectFactory = new MorphiaObjectFactory();
         datastore = morphia.createDatastore(mongoClient, BRIDGE_DB_NAME);
     }
 
@@ -67,6 +70,8 @@ public class Storage {
             } catch (Exception e) {
                 logger.error("", e);
             }
+        } else {
+            logger.warn("Can't find the user from mongodb(userId: " + userId + ")");
         }
         return user;
     }

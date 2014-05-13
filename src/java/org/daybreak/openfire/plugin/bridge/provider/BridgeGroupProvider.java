@@ -62,10 +62,12 @@ public class BridgeGroupProvider extends AbstractGroupProvider {
         BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
         try {
             String token = bridgeService.getToken(user.getNode());
-            List<Membership> membershipList = bridgeService.findUserMemberships(token);
-            for (Membership membership : membershipList) {
-                org.daybreak.openfire.plugin.bridge.model.Group bridgeGroup = membership.getGroup();
-                groupNames.add(bridgeGroup.getId());
+            if (StringUtils.isNotEmpty(token)) {
+                List<Membership> membershipList = bridgeService.findUserMemberships(token);
+                for (Membership membership : membershipList) {
+                    org.daybreak.openfire.plugin.bridge.model.Group bridgeGroup = membership.getGroup();
+                    groupNames.add(bridgeGroup.getId());
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
