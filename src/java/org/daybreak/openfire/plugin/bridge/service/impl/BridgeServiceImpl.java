@@ -13,8 +13,6 @@ import org.daybreak.openfire.plugin.bridge.model.Membership;
 import org.daybreak.openfire.plugin.bridge.model.User;
 import org.daybreak.openfire.plugin.bridge.utils.HttpConnectionManager;
 import org.daybreak.openfire.plugin.bridge.utils.RedisClient;
-import org.daybreak.openfire.plugin.bridge.utils.Storage;
-
 
 import java.io.IOException;
 import java.util.*;
@@ -100,7 +98,7 @@ public class BridgeServiceImpl implements BridgeService {
                     User.class
             );
             user.setAccessToken(token);
-            Storage.getInstance().setUser(user);
+            RedisClient.getInstance().setUser(user);
             return user;
         } finally {
             httpConnectionManager.close();
@@ -119,7 +117,7 @@ public class BridgeServiceImpl implements BridgeService {
                             + "/api/v1/users/" + id, tokenParameters),
                     User.class
             );
-            Storage.getInstance().setUser(user);
+            RedisClient.getInstance().setUser(user);
             return user;
         } finally {
             httpConnectionManager.close();
@@ -147,7 +145,7 @@ public class BridgeServiceImpl implements BridgeService {
                     user.setId(userId);
                 }
                 user.setAccessToken(accessToken.getAccessToken());
-                Storage.getInstance().setUser(user);
+                RedisClient.getInstance().setUser(user);
                 return accessToken.getAccessToken();
             } else {
                 throw new BridgeException(accessToken.getError(), accessToken.getErrorDescription());
@@ -172,7 +170,7 @@ public class BridgeServiceImpl implements BridgeService {
 
     @Override
     public User loadUser(String userId) throws Exception {
-        return Storage.getInstance().getUser(userId);
+        return RedisClient.getInstance().getUser(userId);
     }
 
     @Override
@@ -189,7 +187,7 @@ public class BridgeServiceImpl implements BridgeService {
 
     @Override
     public String getOneToken() throws Exception {
-        return Storage.getInstance().getOneToken();
+        return RedisClient.getInstance().getOneToken();
     }
 
     @Override

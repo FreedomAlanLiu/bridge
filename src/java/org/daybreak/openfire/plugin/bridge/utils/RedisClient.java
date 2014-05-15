@@ -99,7 +99,10 @@ public class RedisClient {
             }
             Object o = RedisSerializeUtil.kryoDeserialize(bytes);
             if (o instanceof User) {
-                return (User) o;
+                User user = (User) o;
+                jedis.setex((USER_PREFIX + user.getId()).getBytes(), JiveGlobals.getIntProperty("plugin.bridge.jedis.userExpire", 604800)
+                        + (int) (3600 * Math.random()), RedisSerializeUtil.kryoSerialize(user)); // 默认生存时间一个星期 + [0 - 1h)
+                return user;
             }
         } catch (JedisException e) {
             borrowOrOprSuccess = false;
