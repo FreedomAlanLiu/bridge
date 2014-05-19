@@ -1,5 +1,6 @@
 package org.daybreak.openfire.plugin.bridge.utils;
 
+import org.daybreak.openfire.plugin.bridge.model.Offline;
 import org.daybreak.openfire.plugin.bridge.model.User;
 import org.jivesoftware.util.JiveGlobals;
 import org.slf4j.Logger;
@@ -20,6 +21,8 @@ public class RedisClient {
     private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
 
     public static final String USER_PREFIX = "user_";
+
+    public static final String OFFLINE_PREFIX = "offline_";
 
     public static final String ONE_TOKEN = "one_token_951862527";
 
@@ -66,13 +69,15 @@ public class RedisClient {
         return redisClient;
     }
 
-    public String setUser(User user) throws IOException, ClassNotFoundException {
+    public String setObject(byte[] key, Object obj, int ex) throws Exception {
         Jedis jedis = null;
         boolean borrowOrOprSuccess = true;
         try {
             jedis = this.jedisPool.getResource();
-            return jedis.setex((USER_PREFIX + user.getId()).getBytes(), JiveGlobals.getIntProperty("plugin.bridge.jedis.userExpire", 604800)
-                    + (int) (3600 * Math.random()), RedisSerializeUtil.kryoSerialize(user)); // 默认生存时间一个星期 + [0 - 1h)
+            if (ex == -1) {
+                return jedis.set(key, RedisSerializeUtil.kryoSerialize(obj));
+            }
+            return jedis.setex(key, ex, RedisSerializeUtil.kryoSerialize(obj));
         } catch (JedisException e) {
             borrowOrOprSuccess = false;
             if (jedis != null) {
@@ -88,21 +93,63 @@ public class RedisClient {
         }
     }
 
-    public User getUser(String userId) throws IOException, ClassNotFoundException {
+    public Object getObject(byte[] key, Class clazz) throws Exception {
         Jedis jedis = null;
         boolean borrowOrOprSuccess = true;
         try {
             jedis = this.jedisPool.getResource();
-            byte[] bytes = jedis.get((USER_PREFIX + userId).getBytes());
+            byte[] bytes = jedis.get(key);
             if (bytes == null) {
                 return null;
             }
-            Object o = RedisSerializeUtil.kryoDeserialize(bytes);
-            if (o instanceof User) {
-                User user = (User) o;
-                jedis.setex((USER_PREFIX + user.getId()).getBytes(), JiveGlobals.getIntProperty("plugin.bridge.jedis.userExpire", 604800)
-                        + (int) (3600 * Math.random()), RedisSerializeUtil.kryoSerialize(user)); // 默认生存时间一个星期 + [0 - 1h)
-                return user;
+            return RedisSerializeUtil.kryoDeserialize(bytes, clazz);
+        } catch (JedisException e) {
+            borrowOrOprSuccess = false;
+            if (jedis != null) {
+                //jedis异常，销毁
+                jedisPool.returnBrokenResource(jedis);
+            }
+            throw e;
+        } finally {
+            if (borrowOrOprSuccess && jedis != null) {
+                //需要还回给pool
+                jedisPool.returnResource(jedis);
+            }
+        }
+    }
+
+    public Long delObject(byte[] key) {
+        Jedis jedis = null;
+        boolean borrowOrOprSuccess = true;
+        try {
+            jedis = this.jedisPool.getResource();
+            return jedis.del(key);
+        } catch (JedisException e) {
+            borrowOrOprSuccess = false;
+            if (jedis != null) {
+                //jedis异常，销毁
+                jedisPool.returnBrokenResource(jedis);
+            }
+            throw e;
+        } finally {
+            if (borrowOrOprSuccess && jedis != null) {
+                //需要还回给pool
+                jedisPool.returnResource(jedis);
+            }
+        }
+    }
+
+    public List getObjects(String prefix, Class clazz) throws Exception {
+        List objects = new ArrayList();
+        Jedis jedis = null;
+        boolean borrowOrOprSuccess = true;
+        try {
+            jedis = this.jedisPool.getResource();
+            Set<byte[]> keys = jedis.keys((prefix + "*").getBytes());
+            for (byte[] key : keys) {
+                byte[] value = jedis.get(key);
+                Object o = RedisSerializeUtil.kryoDeserialize(value, clazz);
+                objects.add(o);
             }
         } catch (JedisException e) {
             borrowOrOprSuccess = false;
@@ -117,7 +164,79 @@ public class RedisClient {
                 jedisPool.returnResource(jedis);
             }
         }
+        return objects;
+    }
+
+    public int getObjectsSize(String prefix) {
+        Jedis jedis = null;
+        boolean borrowOrOprSuccess = true;
+        try {
+            jedis = this.jedisPool.getResource();
+            Set<byte[]> keys = jedis.keys((prefix + "*").getBytes());
+            return keys.size();
+        } catch (JedisException e) {
+            borrowOrOprSuccess = false;
+            if (jedis != null) {
+                //jedis异常，销毁
+                jedisPool.returnBrokenResource(jedis);
+            }
+            throw e;
+        } finally {
+            if (borrowOrOprSuccess && jedis != null) {
+                //需要还回给pool
+                jedisPool.returnResource(jedis);
+            }
+        }
+    }
+
+    public String setUser(User user) throws Exception {
+        return setObject((USER_PREFIX + user.getId()).getBytes(), user, -1);
+    }
+
+    public User getUser(String userId) throws Exception {
+        Object o = getObject((USER_PREFIX + userId).getBytes(), User.class);
+        if (o instanceof User) {
+            return (User) o;
+        }
         return null;
+    }
+
+    public String setOffline(Offline offline) throws Exception {
+        int size = getObjectsSize(OFFLINE_PREFIX + offline.getUsername() + "_" + offline.getMessageID() + "_*");
+        if (size == 0) {
+            return setObject((OFFLINE_PREFIX + offline.getUsername() + "_" + offline.getMessageID() + "_" + offline.getCreationDate().getTime()).getBytes(),
+                    offline,
+                    JiveGlobals.getIntProperty("plugin.bridge.jedis.userExpire", 604800) + (int) (3600 * Math.random()));
+        }
+        return null;
+    }
+
+    public Offline getOffline(String username, Date createDate) throws Exception {
+        Object o = getObject((OFFLINE_PREFIX + username + "_*_" + createDate.getTime()).getBytes(), Offline.class);
+        if (o instanceof Offline) {
+            return (Offline) o;
+        }
+        return null;
+    }
+
+    public List getOfflineList(String username) throws Exception {
+        return getObjects(OFFLINE_PREFIX + username + "_*", Offline.class);
+    }
+
+    public Long delOfflineList(String username) {
+        return delObject((OFFLINE_PREFIX + username + "_*").getBytes());
+    }
+
+    public Long delOffline(String username, Date createDate) {
+        return delObject((OFFLINE_PREFIX + username + "_*_" + createDate.getTime()).getBytes());
+    }
+
+    public int getOfflineListSize(String username) {
+        return getObjectsSize(OFFLINE_PREFIX + username + "_*");
+    }
+
+    public int getAllOfflineListSize() {
+        return getObjectsSize(OFFLINE_PREFIX + "*");
     }
 
     public String getOneToken() throws IOException, ClassNotFoundException {
@@ -128,7 +247,7 @@ public class RedisClient {
             Set<byte[]> keys = jedis.keys((USER_PREFIX + "*").getBytes());
             for (byte[] key : keys) {
                 byte[] value = jedis.get(key);
-                Object o = RedisSerializeUtil.kryoDeserialize(value);
+                Object o = RedisSerializeUtil.kryoDeserialize(value, User.class);
                 if (o instanceof User) {
                     User u = (User) o;
                     String token = u.getAccessToken();

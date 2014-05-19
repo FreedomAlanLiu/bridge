@@ -1,7 +1,11 @@
 package org.daybreak.openfire.plugin.bridge;
 
+import org.daybreak.openfire.plugin.bridge.provider.RedisOfflineMessageStore;
 import org.daybreak.openfire.plugin.bridge.utils.RedisClient;
+import org.jivesoftware.openfire.OfflineMessageStore;
 import org.jivesoftware.openfire.XMPPServer;
+import org.jivesoftware.openfire.commands.clearspace.SystemAdminAdded;
+import org.jivesoftware.openfire.container.Module;
 import org.jivesoftware.openfire.container.Plugin;
 import org.jivesoftware.openfire.container.PluginManager;
 import org.jivesoftware.openfire.interceptor.InterceptorManager;
@@ -12,7 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * Created by Alan on 2014/4/2.
@@ -37,6 +43,9 @@ public class BridgePlugin implements Plugin {
 
         // 初始化redis & mongo相关
         RedisClient.getInstance().initialPool();
+
+        // hack offline message store
+        hackOfflineMessageStore();
 
         // 添加消息拦截器
         bridgePacketInterceptor = new BridgePacketInterceptor();
@@ -114,5 +123,26 @@ public class BridgePlugin implements Plugin {
             return;
         }
         VCardManager.getInstance().initialize(XMPPServer.getInstance());
+    }
+
+    private void hackOfflineMessageStore() {
+        try {
+            RedisOfflineMessageStore offlineMessageStore = new RedisOfflineMessageStore();
+            Field field = XMPPServer.class.getDeclaredField("modules");
+            field.setAccessible(true);
+            Map<Class, Module> modules = (Map<Class, Module>) field.get(XMPPServer.getInstance());
+            modules.put(OfflineMessageStore.class, offlineMessageStore);
+            for (Module module : modules.values()) {
+                module.stop();
+                module.initialize(XMPPServer.getInstance());
+                module.start();
+            }
+            XMPPServer.getInstance().getOfflineMessageStrategy().initialize(XMPPServer.getInstance());
+            System.out.println("hackOfflineMessageStore success!");
+            Log.info("hackOfflineMessageStore success!");
+        } catch (Exception ex) {
+            Log.error(ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 }

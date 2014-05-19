@@ -8,8 +8,8 @@
     <name>Bridge</name>
     <description>Bridge</description>
     <author>daybreak</author>
-    <version>2.0.1</version>
-    <date>5/13/2014</date>
+    <version>2.1.0</version>
+    <date>5/16/2014</date>
     <minServerVersion>3.8.0</minServerVersion>
 
     <!-- UI extension -->
