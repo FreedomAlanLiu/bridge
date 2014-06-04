@@ -146,6 +146,7 @@ public class BridgeServiceImpl implements BridgeService {
                 }
                 user.setAccessToken(accessToken.getAccessToken());
                 RedisClient.getInstance().setUser(user);
+                RedisClient.getInstance().setOneToken(accessToken.getAccessToken());
                 return accessToken.getAccessToken();
             } else {
                 throw new BridgeException(accessToken.getError(), accessToken.getErrorDescription());

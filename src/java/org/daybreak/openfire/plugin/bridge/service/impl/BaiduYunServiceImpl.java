@@ -25,10 +25,17 @@ public class BaiduYunServiceImpl implements BaiduYunService {
 
     private BaiduChannelClient channelClient;
 
+    private int iosDeployStatus;
+    private int iosMessageType;
+
     public BaiduYunServiceImpl() {
         // 设置developer平台的ApiKey/SecretKey
         String apiKey = JiveGlobals.getProperty("plugin.bridge.bccs.ak", "FOVIVsKp1WTQRQHzW1jvtD8F");
         String secretKey = JiveGlobals.getProperty("plugin.bridge.bccs.sk", "q6ixGI1EiAG2SW1QPQWTaVfZZWWeQtz4");
+
+        iosDeployStatus = JiveGlobals.getIntProperty("plugin.bridge.bccs.IOSDeployStatus", 1); // 默认开发模式
+        iosMessageType = JiveGlobals.getIntProperty("plugin.bridge.bccs.IOSMessageType", 1); // 默认消息类型为notification
+
         ChannelKeyPair pair = new ChannelKeyPair(apiKey, secretKey);
 
         // 创建BaiduChannelClient对象实例
@@ -53,9 +60,9 @@ public class BaiduYunServiceImpl implements BaiduYunService {
                 if (deviceType.toString().equalsIgnoreCase(deviceTypeStr)) {
                     if (deviceType == DeviceType.IOS) {
                         // 设备为ios的时候设置开发模式
-                        request.setDeployStatus(1);
+                        request.setDeployStatus(iosDeployStatus);
                         // 设备为ios的时候消息类型为notification
-                        request.setMessageType(1);
+                        request.setMessageType(iosMessageType);
                     }
                     // device_type => 1: web 2: pc 3:android 4:ios 5:wp
                     request.setDeviceType(deviceType.ordinal());
@@ -94,9 +101,9 @@ public class BaiduYunServiceImpl implements BaiduYunService {
                 if (deviceType.toString().equalsIgnoreCase(deviceTypeStr)) {
                     if (deviceType == DeviceType.IOS) {
                         // 设备为ios的时候设置开发模式
-                        request.setDeployStatus(1);
+                        request.setDeployStatus(iosDeployStatus);
                         // 设备为ios的时候消息类型为notification
-                        request.setMessageType(1);
+                        request.setMessageType(iosMessageType);
                     }
                     // device_type => 1: web 2: pc 3:android 4:ios 5:wp
                     request.setDeviceType(deviceType.ordinal());

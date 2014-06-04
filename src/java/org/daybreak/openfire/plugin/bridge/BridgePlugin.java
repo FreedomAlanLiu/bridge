@@ -1,7 +1,11 @@
 package org.daybreak.openfire.plugin.bridge;
 
 import org.daybreak.openfire.plugin.bridge.provider.RedisOfflineMessageStore;
+import org.daybreak.openfire.plugin.bridge.resource.MessageResource;
 import org.daybreak.openfire.plugin.bridge.utils.RedisClient;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.jivesoftware.openfire.OfflineMessageStore;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.commands.clearspace.SystemAdminAdded;
@@ -18,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.util.Map;
 
 /**
@@ -30,7 +35,11 @@ public class BridgePlugin implements Plugin {
     //public static String BRIDGE_HOST = JiveGlobals.getProperty("plugin.bridge.host", "124.205.151.249");
     public static String BRIDGE_HOST = JiveGlobals.getProperty("plugin.bridge.host", "124.205.151.250");
 
+    public static String RESOURCE_BASE_URI = JiveGlobals.getProperty("plugin.bridge.resource.base.uri", "http://localhost:8080/bridge/");
+
     private PacketInterceptor bridgePacketInterceptor;
+
+    private HttpServer httpServer;
 
     public void initializePlugin(PluginManager manager, File pluginDirectory) {
         System.out.println("Starting Bridge Plugin");
@@ -50,11 +59,32 @@ public class BridgePlugin implements Plugin {
         // 添加消息拦截器
         bridgePacketInterceptor = new BridgePacketInterceptor();
         InterceptorManager.getInstance().addInterceptor(bridgePacketInterceptor);
+
+        // 启动http服务器
+        httpServer = startHttpServer();
+    }
+
+    /**
+     * Starts Grizzly HTTP server exposing JAX-RS resources defined in this application.
+     * @return Grizzly HTTP server.
+     */
+    public static HttpServer startHttpServer() {
+        // create a resource config that scans for JAX-RS resources and providers
+        // in com.example package
+        final ResourceConfig rc = new ResourceConfig();
+        rc.register(MessageResource.class);
+
+        // create and start a new instance of grizzly http server
+        // exposing the Jersey application at BASE_URI
+        return GrizzlyHttpServerFactory.createHttpServer(URI.create(RESOURCE_BASE_URI), rc);
     }
 
     public void destroyPlugin() {
         // 移除消息拦截器
         InterceptorManager.getInstance().removeInterceptor(bridgePacketInterceptor);
+
+        // 关闭http服务
+        httpServer.shutdownNow();
     }
 
     private void hackAuthProvider() {

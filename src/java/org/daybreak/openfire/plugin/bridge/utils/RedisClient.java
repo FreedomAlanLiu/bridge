@@ -206,7 +206,7 @@ public class RedisClient {
         if (size == 0) {
             return setObject((OFFLINE_PREFIX + offline.getUsername() + "_" + offline.getMessageID() + "_" + offline.getCreationDate().getTime()).getBytes(),
                     offline,
-                    JiveGlobals.getIntProperty("plugin.bridge.jedis.userExpire", 604800) + (int) (3600 * Math.random()));
+                    JiveGlobals.getIntProperty("plugin.bridge.jedis.offlineExpire", 604800) + (int) (3600 * Math.random()));
         }
         return null;
     }
@@ -239,7 +239,23 @@ public class RedisClient {
         return getObjectsSize(OFFLINE_PREFIX + "*");
     }
 
-    public String getOneToken() throws IOException, ClassNotFoundException {
+    public String setOneToken(String oneToken) throws Exception {
+        int size = getObjectsSize(ONE_TOKEN);
+        if (size == 0) {
+            return setObject(ONE_TOKEN.getBytes(), oneToken, JiveGlobals.getIntProperty("plugin.bridge.jedis.oneTokenExpire", 3600));
+        }
+        return null;
+    }
+
+    public String getOneToken() throws Exception {
+        String oneToken = (String) getObject(ONE_TOKEN.getBytes(), String.class);
+        if (oneToken == null) {
+            oneToken = getOneTokenFromUsers();
+        }
+        return oneToken;
+    }
+
+    public String getOneTokenFromUsers() throws IOException, ClassNotFoundException {
         Jedis jedis = null;
         boolean borrowOrOprSuccess = true;
         try {
