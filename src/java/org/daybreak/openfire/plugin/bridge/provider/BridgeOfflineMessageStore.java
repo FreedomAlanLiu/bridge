@@ -1,7 +1,7 @@
 package org.daybreak.openfire.plugin.bridge.provider;
 
 import org.daybreak.openfire.plugin.bridge.model.Offline;
-import org.daybreak.openfire.plugin.bridge.utils.RedisClient;
+import org.daybreak.openfire.plugin.bridge.utils.RedisUtil;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -31,9 +31,9 @@ import java.util.regex.Pattern;
 /**
  * Created by alan on 14-5-16.
  */
-public class RedisOfflineMessageStore extends OfflineMessageStore {
+public class BridgeOfflineMessageStore extends OfflineMessageStore {
 
-    private static final Logger Log = LoggerFactory.getLogger(RedisOfflineMessageStore.class);
+    private static final Logger Log = LoggerFactory.getLogger(BridgeOfflineMessageStore.class);
 
     private static final int POOL_SIZE = 10;
 
@@ -60,7 +60,7 @@ public class RedisOfflineMessageStore extends OfflineMessageStore {
     /**
      * Constructs a new offline message store.
      */
-    public RedisOfflineMessageStore() {
+    public BridgeOfflineMessageStore() {
         super();
     }
 
@@ -102,7 +102,7 @@ public class RedisOfflineMessageStore extends OfflineMessageStore {
         offline.setStanza(msgXML);
 
         try {
-            RedisClient.getInstance().setOffline(offline);
+            RedisUtil.getInstance().setOffline(offline);
         } catch (Exception e) {
             Log.error(LocaleUtils.getLocalizedString("admin.error"), e);
         }
@@ -123,7 +123,7 @@ public class RedisOfflineMessageStore extends OfflineMessageStore {
         try {
             // Get a sax reader from the pool
             xmlReader = xmlReaders.take();
-            List offlineList = RedisClient.getInstance().getOfflineList(username);
+            List offlineList = RedisUtil.getInstance().getOfflineList(username);
             for (Object obj : offlineList) {
                 if (!(obj instanceof Offline)) {
                     continue;
@@ -159,7 +159,7 @@ public class RedisOfflineMessageStore extends OfflineMessageStore {
             // messages to delete.
             if (delete && !messages.isEmpty()) {
                 try {
-                    RedisClient.getInstance().delOfflineList(username);
+                    RedisUtil.getInstance().delOfflineList(username);
                 }
                 catch (Exception e) {
                     Log.error("Error deleting offline messages of username: " + username, e);
@@ -190,7 +190,7 @@ public class RedisOfflineMessageStore extends OfflineMessageStore {
         try {
             // Get a sax reader from the pool
             xmlReader = xmlReaders.take();
-            Offline offline = RedisClient.getInstance().getOffline(username, creationDate);
+            Offline offline = RedisUtil.getInstance().getOffline(username, creationDate);
             if (offline != null) {
                 String msgXML = offline.getStanza();
                 message = new OfflineMessage(creationDate,
@@ -223,7 +223,7 @@ public class RedisOfflineMessageStore extends OfflineMessageStore {
      */
     public void deleteMessages(String username) {
         try {
-            RedisClient.getInstance().delOfflineList(username);
+            RedisUtil.getInstance().delOfflineList(username);
         } catch (Exception e) {
             Log.error("Error deleting offline messages of username: " + username, e);
         }
@@ -238,7 +238,7 @@ public class RedisOfflineMessageStore extends OfflineMessageStore {
      */
     public void deleteMessage(String username, Date creationDate) {
         try {
-            RedisClient.getInstance().delOffline(username, creationDate);
+            RedisUtil.getInstance().delOffline(username, creationDate);
         } catch (Exception e) {
             Log.error("Error deleting offline messages of username: " + username +
                     " creationDate: " + creationDate, e);
@@ -255,7 +255,7 @@ public class RedisOfflineMessageStore extends OfflineMessageStore {
     public int getSize(String username) {
         int size = 0;
         try {
-            size = RedisClient.getInstance().getOfflineListSize(username);
+            size = RedisUtil.getInstance().getOfflineListSize(username);
         } catch (Exception e) {
             Log.error(LocaleUtils.getLocalizedString("admin.error"), e);
         }
@@ -271,7 +271,7 @@ public class RedisOfflineMessageStore extends OfflineMessageStore {
     public int getSize() {
         int size = 0;
         try {
-            size = RedisClient.getInstance().getAllOfflineListSize();
+            size = RedisUtil.getInstance().getAllOfflineListSize();
         } catch (Exception e) {
             Log.error(LocaleUtils.getLocalizedString("admin.error"), e);
         }

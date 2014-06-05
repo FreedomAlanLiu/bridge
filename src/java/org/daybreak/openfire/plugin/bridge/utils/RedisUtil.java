@@ -14,11 +14,11 @@ import java.util.*;
 /**
  * Created by alan on 14-5-8.
  */
-public class RedisClient {
+public class RedisUtil {
 
-    private static RedisClient redisClient = new RedisClient();
+    private static RedisUtil redisUtil = new RedisUtil();
 
-    private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedisUtil.class);
 
     public static final String USER_PREFIX = "user_";
 
@@ -29,7 +29,7 @@ public class RedisClient {
     private JedisPool jedisPool;//非切片连接池
     private ShardedJedisPool shardedJedisPool;//切片连接池
 
-    private RedisClient() {
+    private RedisUtil() {
     }
 
     /**
@@ -65,8 +65,8 @@ public class RedisClient {
         shardedJedisPool = new ShardedJedisPool(config, shards);
     }*/
 
-    public static RedisClient getInstance() {
-        return redisClient;
+    public static RedisUtil getInstance() {
+        return redisUtil;
     }
 
     public String setObject(byte[] key, Object obj, int ex) throws Exception {

@@ -2,6 +2,7 @@ package org.daybreak.openfire.plugin.bridge;
 
 import org.apache.commons.lang3.StringUtils;
 import org.daybreak.openfire.plugin.bridge.model.*;
+import org.daybreak.openfire.plugin.bridge.provider.BridgeHistoryMessageStore;
 import org.daybreak.openfire.plugin.bridge.service.BaiduYunService;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
 import org.jivesoftware.openfire.XMPPServer;
@@ -16,7 +17,6 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.List;
 
 /**
@@ -28,6 +28,10 @@ public class BridgePacketInterceptor implements PacketInterceptor {
 
     @Override
     public void interceptPacket(Packet packet, Session session, boolean incoming, boolean processed) throws PacketRejectedException {
+        if (incoming && (packet instanceof Message)) {
+            BridgeHistoryMessageStore.getInstance().addMessage((Message) packet);
+        }
+
         boolean bccsActivate = JiveGlobals.getBooleanProperty("plugin.bridge.bccs.activate", false);
         if (!bccsActivate || !incoming || !processed) {
             return;

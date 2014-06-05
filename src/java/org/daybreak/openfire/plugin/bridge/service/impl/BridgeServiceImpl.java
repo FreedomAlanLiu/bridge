@@ -12,7 +12,7 @@ import org.daybreak.openfire.plugin.bridge.model.AccessToken;
 import org.daybreak.openfire.plugin.bridge.model.Membership;
 import org.daybreak.openfire.plugin.bridge.model.User;
 import org.daybreak.openfire.plugin.bridge.utils.HttpConnectionManager;
-import org.daybreak.openfire.plugin.bridge.utils.RedisClient;
+import org.daybreak.openfire.plugin.bridge.utils.RedisUtil;
 
 import java.io.IOException;
 import java.util.*;
@@ -98,7 +98,7 @@ public class BridgeServiceImpl implements BridgeService {
                     User.class
             );
             user.setAccessToken(token);
-            RedisClient.getInstance().setUser(user);
+            RedisUtil.getInstance().setUser(user);
             return user;
         } finally {
             httpConnectionManager.close();
@@ -117,7 +117,7 @@ public class BridgeServiceImpl implements BridgeService {
                             + "/api/v1/users/" + id, tokenParameters),
                     User.class
             );
-            RedisClient.getInstance().setUser(user);
+            RedisUtil.getInstance().setUser(user);
             return user;
         } finally {
             httpConnectionManager.close();
@@ -145,8 +145,8 @@ public class BridgeServiceImpl implements BridgeService {
                     user.setId(userId);
                 }
                 user.setAccessToken(accessToken.getAccessToken());
-                RedisClient.getInstance().setUser(user);
-                RedisClient.getInstance().setOneToken(accessToken.getAccessToken());
+                RedisUtil.getInstance().setUser(user);
+                RedisUtil.getInstance().setOneToken(accessToken.getAccessToken());
                 return accessToken.getAccessToken();
             } else {
                 throw new BridgeException(accessToken.getError(), accessToken.getErrorDescription());
@@ -171,7 +171,7 @@ public class BridgeServiceImpl implements BridgeService {
 
     @Override
     public User loadUser(String userId) throws Exception {
-        return RedisClient.getInstance().getUser(userId);
+        return RedisUtil.getInstance().getUser(userId);
     }
 
     @Override
@@ -188,7 +188,7 @@ public class BridgeServiceImpl implements BridgeService {
 
     @Override
     public String getOneToken() throws Exception {
-        return RedisClient.getInstance().getOneToken();
+        return RedisUtil.getInstance().getOneToken();
     }
 
     @Override

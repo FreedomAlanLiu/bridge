@@ -1,14 +1,15 @@
 package org.daybreak.openfire.plugin.bridge;
 
-import org.daybreak.openfire.plugin.bridge.provider.RedisOfflineMessageStore;
+import org.daybreak.openfire.plugin.bridge.provider.BridgeHistoryMessageStore;
+import org.daybreak.openfire.plugin.bridge.provider.BridgeOfflineMessageStore;
 import org.daybreak.openfire.plugin.bridge.resource.MessageResource;
-import org.daybreak.openfire.plugin.bridge.utils.RedisClient;
+import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
+import org.daybreak.openfire.plugin.bridge.utils.RedisUtil;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.jivesoftware.openfire.OfflineMessageStore;
 import org.jivesoftware.openfire.XMPPServer;
-import org.jivesoftware.openfire.commands.clearspace.SystemAdminAdded;
 import org.jivesoftware.openfire.container.Module;
 import org.jivesoftware.openfire.container.Plugin;
 import org.jivesoftware.openfire.container.PluginManager;
@@ -51,7 +52,13 @@ public class BridgePlugin implements Plugin {
         hackVCardProvider();
 
         // 初始化redis & mongo相关
-        RedisClient.getInstance().initialPool();
+        try {
+            RedisUtil.getInstance().initialPool();
+            MongoUtil.getInstance().init();
+            BridgeHistoryMessageStore.getInstance().start();
+        } catch (Exception e) {
+            Log.error("", e);
+        }
 
         // hack offline message store
         hackOfflineMessageStore();
@@ -157,7 +164,7 @@ public class BridgePlugin implements Plugin {
 
     private void hackOfflineMessageStore() {
         try {
-            RedisOfflineMessageStore offlineMessageStore = new RedisOfflineMessageStore();
+            BridgeOfflineMessageStore offlineMessageStore = new BridgeOfflineMessageStore();
             Field field = XMPPServer.class.getDeclaredField("modules");
             field.setAccessible(true);
             Map<Class, Module> modules = (Map<Class, Module>) field.get(XMPPServer.getInstance());
