@@ -75,8 +75,8 @@ public class BridgeHistoryMessageStore {
         String msgXML = message.getElement().asXML();
 
         History history = new History();
+        history.setId(username + "_" + message.getID());
         history.setUsername(username);
-        history.setMessageID(message.getID());
         history.setCreationDate(new Date());
         history.setMessageSize(msgXML.length());
         history.setStanza(msgXML);

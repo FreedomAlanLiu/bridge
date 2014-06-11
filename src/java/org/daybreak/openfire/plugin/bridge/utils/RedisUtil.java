@@ -118,12 +118,17 @@ public class RedisUtil {
         }
     }
 
-    public Long delObject(byte[] key) {
+    public long delObjects(byte[] pkey) {
         Jedis jedis = null;
         boolean borrowOrOprSuccess = true;
         try {
             jedis = this.jedisPool.getResource();
-            return jedis.del(key);
+            Set<byte[]> keys = jedis.keys(pkey);
+            long count = 0;
+            for (byte[] key : keys) {
+                count += jedis.del(key);
+            }
+            return count;
         } catch (JedisException e) {
             borrowOrOprSuccess = false;
             if (jedis != null) {
@@ -224,11 +229,11 @@ public class RedisUtil {
     }
 
     public Long delOfflineList(String username) {
-        return delObject((OFFLINE_PREFIX + username + "_*").getBytes());
+        return delObjects((OFFLINE_PREFIX + username + "_*").getBytes());
     }
 
     public Long delOffline(String username, Date createDate) {
-        return delObject((OFFLINE_PREFIX + username + "_*_" + createDate.getTime()).getBytes());
+        return delObjects((OFFLINE_PREFIX + username + "_*_" + createDate.getTime()).getBytes());
     }
 
     public int getOfflineListSize(String username) {

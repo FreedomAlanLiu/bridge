@@ -29,7 +29,16 @@ public class BridgePacketInterceptor implements PacketInterceptor {
     @Override
     public void interceptPacket(Packet packet, Session session, boolean incoming, boolean processed) throws PacketRejectedException {
         if (incoming && (packet instanceof Message)) {
-            BridgeHistoryMessageStore.getInstance().addMessage((Message) packet);
+            try {
+                logger.info("incoming message:" + packet.toXML());
+                BridgeHistoryMessageStore.getInstance().addMessage((Message) packet);
+            } catch (Exception e) {
+                logger.error("", e);
+            }
+        }
+
+        if (processed && (packet instanceof Message)) {
+            logger.info("processed message:" + packet.toXML());
         }
 
         boolean bccsActivate = JiveGlobals.getBooleanProperty("plugin.bridge.bccs.activate", false);

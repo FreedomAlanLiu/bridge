@@ -69,6 +69,7 @@ public class BridgePlugin implements Plugin {
 
         // 启动http服务器
         httpServer = startHttpServer();
+        Log.info("Grizzly HTTP server启动成功！");
     }
 
     /**

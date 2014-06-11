@@ -13,7 +13,8 @@ import java.util.Date;
 public class History {
 
     @Id
-    private String messageID;
+    private String id;
+
     private String username;
     private Date creationDate;
     private int messageSize;
@@ -27,12 +28,12 @@ public class History {
         this.username = username;
     }
 
-    public String getMessageID() {
-        return messageID;
+    public String getId() {
+        return id;
     }
 
-    public void setMessageID(String messageID) {
-        this.messageID = messageID;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public Date getCreationDate() {

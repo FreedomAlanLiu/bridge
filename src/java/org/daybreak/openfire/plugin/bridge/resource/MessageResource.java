@@ -1,6 +1,9 @@
 package org.daybreak.openfire.plugin.bridge.resource;
 
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.daybreak.openfire.plugin.bridge.model.History;
+import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -9,17 +12,22 @@ import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.group.Group;
 import org.jivesoftware.openfire.group.GroupManager;
 import org.jivesoftware.openfire.group.GroupNotFoundException;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.PacketExtension;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 import java.io.StringReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by alan on 14-5-30.
@@ -29,14 +37,44 @@ public class MessageResource {
 
     private static final Logger logger = LoggerFactory.getLogger(MessageResource.class);
 
+    private ObjectMapper mapper = new ObjectMapper();
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public String get(@QueryParam("username") String userName,
+                      @QueryParam("startDateStr") String startDateStr,
+                      @QueryParam("start") int start,
+                      @QueryParam("length") int length) throws IOException {
+        Datastore datastore = MongoUtil.getInstance().getDatastore();
+
+        Date startDate = new Date();
+        try {
+            if (startDateStr != null) {
+                startDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:dd").parse(startDateStr);
+            }
+        } catch (ParseException e) {
+            logger.warn("", e);
+        }
+
+        Query query = datastore.createQuery(History.class)
+                .filter("username =", userName)
+                .filter("creationDate >=", startDate)
+                .offset(start).limit(length);
+        List<History> historyList = query.asList();
+        return mapper.writeValueAsString(historyList);
+    }
+
     @POST
     @Consumes("application/x-www-form-urlencoded")
-    public void post(@FormParam("from") String from,
+    @Produces(MediaType.APPLICATION_JSON)
+    public String post(@FormParam("from") String from,
                      @FormParam("to") String to,
                      @FormParam("body") String body,
                      @FormParam("type") String type,
                      @FormParam("extType") String extType,
                      @FormParam("extContent") String extContent) {
+        logger.info("post message: [from: " + from + ", to: " + to + ", body: " + body + ", type: "
+                + type + ", extType: " + extType + ", extContent: " + extContent + "]");
         JID fromJid = new JID(from);
         JID toJid = new JID(to);
         Message.Type messageType = Message.Type.chat;
@@ -44,6 +82,7 @@ public class MessageResource {
             messageType = Message.Type.groupchat;
         }
         pushMessage(fromJid, toJid, body, messageType, extType, extContent);
+        return "{result: success}";
     }
 
     private static void pushMessage(JID from, JID to, String body,
@@ -72,6 +111,7 @@ public class MessageResource {
                 for (JID jid : group.getMembers()) {
                     message.setTo(jid);
                     XMPPServer.getInstance().getRoutingTable().routePacket(jid, message, true);
+                    logger.info("HTTP server route message: " + message.toXML());
                 }
             } catch (GroupNotFoundException e) {
                 logger.error("", e);
@@ -81,6 +121,7 @@ public class MessageResource {
             message.setTo(to);
             message.setBody(body);
             XMPPServer.getInstance().getRoutingTable().routePacket(to, message, true);
+            logger.info("HTTP server route message: " + message.toXML());
         }
     }
 
