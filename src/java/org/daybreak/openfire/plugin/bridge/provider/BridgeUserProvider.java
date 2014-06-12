@@ -27,13 +27,10 @@ public class BridgeUserProvider implements UserProvider {
             String token = bridgeService.getToken(userId);
             if (StringUtils.isNotEmpty(token)) {
                 bridgeUser = bridgeService.findUser(token);
-                /*
-                Roster缓存可以进行配置，将其存在的时间缩短
-                如果不需要此缓存，可以设置最大数量和生存时间为-1
 
                 // 擦除对应的Roster缓存
                 Cache rosterCache = CacheFactory.createCache("Roster");
-                rosterCache.remove(bridgeUser.getId());*/
+                rosterCache.remove(bridgeUser.getId());
             } else {
                 token = bridgeService.getOneToken();
                 if (StringUtils.isNotEmpty(token)) {

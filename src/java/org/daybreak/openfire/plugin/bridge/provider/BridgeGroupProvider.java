@@ -36,7 +36,7 @@ public class BridgeGroupProvider extends AbstractGroupProvider {
                 return new Group(name, "", members, administrators);
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new GroupNotFoundException("can't find group: " + name, e);
         }
         throw new GroupNotFoundException();
     }

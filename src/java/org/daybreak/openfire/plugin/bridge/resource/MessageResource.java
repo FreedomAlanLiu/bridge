@@ -2,20 +2,24 @@ package org.daybreak.openfire.plugin.bridge.resource;
 
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.daybreak.openfire.plugin.bridge.BridgeServiceFactory;
 import org.daybreak.openfire.plugin.bridge.model.History;
+import org.daybreak.openfire.plugin.bridge.model.User;
+import org.daybreak.openfire.plugin.bridge.service.BridgeService;
 import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
-import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.group.Group;
 import org.jivesoftware.openfire.group.GroupManager;
 import org.jivesoftware.openfire.group.GroupNotFoundException;
+import org.jivesoftware.util.JiveGlobals;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmpp.component.ComponentException;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.PacketExtension;
@@ -24,9 +28,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.StringReader;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -39,26 +40,37 @@ public class MessageResource {
 
     private ObjectMapper mapper = new ObjectMapper();
 
+    String broadcastServiceName = JiveGlobals.getProperty("plugin.broadcast.serviceName", "broadcast");
+    String broadMessagePrefix = JiveGlobals.getProperty("plugin.broadcast.messagePrefix", "(broadcast)");
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public String get(@QueryParam("username") String userName,
-                      @QueryParam("startDateStr") String startDateStr,
+    public String get(@QueryParam("fromUserId") String fromUserId,
+                      @QueryParam("toUserId") String toUserId,
+                      @QueryParam("token") String token,
+                      @QueryParam("startTime") long startTime,
                       @QueryParam("start") int start,
                       @QueryParam("length") int length) throws IOException {
-        Datastore datastore = MongoUtil.getInstance().getDatastore();
 
-        Date startDate = new Date();
+        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
         try {
-            if (startDateStr != null) {
-                startDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:dd").parse(startDateStr);
+            User u = bridgeService.findUser(fromUserId, token);
+            if (u == null) {
+                u = bridgeService.findUser(toUserId, token);
             }
-        } catch (ParseException e) {
-            logger.warn("", e);
+            if (u == null) {
+                logger.warn("token validation failed!");
+                return "{\"result\": \"error\", \"cause\": \"token validation failed!\"}";
+            }
+        } catch (Exception e) {
+            logger.error("", e);
         }
 
+        Datastore datastore = MongoUtil.getInstance().getDatastore();
         Query query = datastore.createQuery(History.class)
-                .filter("username =", userName)
-                .filter("creationDate >=", startDate)
+                .filter("fromUserId =", fromUserId)
+                .filter("toUserId =", toUserId)
+                .filter("creationTime <=", startTime)
                 .offset(start).limit(length);
         List<History> historyList = query.asList();
         return mapper.writeValueAsString(historyList);
@@ -73,23 +85,27 @@ public class MessageResource {
                      @FormParam("type") String type,
                      @FormParam("extType") String extType,
                      @FormParam("extContent") String extContent) {
+
         logger.info("post message: [from: " + from + ", to: " + to + ", body: " + body + ", type: "
                 + type + ", extType: " + extType + ", extContent: " + extContent + "]");
-        JID fromJid = new JID(from);
-        JID toJid = new JID(to);
-        Message.Type messageType = Message.Type.chat;
-        if ("groupchat".equals(type)) {
-            messageType = Message.Type.groupchat;
+        try {
+            JID fromJid = new JID(from);
+            JID toJid = new JID(to);
+            Message.Type messageType = Message.Type.chat;
+            if ("groupchat".equals(type)) {
+                messageType = Message.Type.groupchat;
+            }
+            pushMessage(fromJid, toJid, body, messageType, extType, extContent);
+        } catch (Exception e) {
+            logger.error("error posting message!", e);
+            return "{\"result\": \"error\", \"cause\": \"" + e.getMessage() + "\"}";
         }
-        pushMessage(fromJid, toJid, body, messageType, extType, extContent);
-        return "{result: success}";
+        return "{\"result\": \"success\"}";
     }
 
-    private static void pushMessage(JID from, JID to, String body,
-                                    Message.Type type, String extType, String extContent) {
-
+    private void pushMessage(JID from, JID to, String body, Message.Type messageType, String extType, String extContent) throws ComponentException {
         Message message = new Message();
-        message.setType(type);
+        message.setType(messageType);
 
         if (StringUtils.isNotEmpty(extContent)) {
             MessageExtension messageExtension = new MessageExtension(extType, extContent);
@@ -102,12 +118,13 @@ public class MessageResource {
             }
         }
 
-        if (type == Message.Type.groupchat) {
+        if (to.getDomain().startsWith(broadcastServiceName + ".")) {
             GroupManager groupManager = GroupManager.getInstance();
             try {
+                logger.info("group id: " + to.getNode());
                 Group group = groupManager.getGroup(to.getNode());
                 message.setFrom(from);
-                message.setBody("(broadcast) " + to.getNode() + "#GID#" + body);
+                message.setBody(broadMessagePrefix + " " + to.getNode() + "#GID#" + body);
                 for (JID jid : group.getMembers()) {
                     message.setTo(jid);
                     XMPPServer.getInstance().getRoutingTable().routePacket(jid, message, true);

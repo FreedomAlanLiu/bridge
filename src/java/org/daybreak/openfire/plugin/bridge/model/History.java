@@ -1,10 +1,7 @@
 package org.daybreak.openfire.plugin.bridge.model;
 
-import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-
-import java.util.Date;
 
 /**
  * Created by alan on 14-5-16.
@@ -15,17 +12,26 @@ public class History {
     @Id
     private String id;
 
-    private String username;
-    private Date creationDate;
+    private String fromUserId;
+    private String toUserId;
+    private long creationTime;
     private int messageSize;
     private String stanza;
 
-    public String getUsername() {
-        return username;
+    public String getToUserId() {
+        return toUserId;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setToUserId(String toUserId) {
+        this.toUserId = toUserId;
+    }
+
+    public String getFromUserId() {
+        return fromUserId;
+    }
+
+    public void setFromUserId(String fromUserId) {
+        this.fromUserId = fromUserId;
     }
 
     public String getId() {
@@ -36,12 +42,12 @@ public class History {
         this.id = id;
     }
 
-    public Date getCreationDate() {
-        return creationDate;
+    public long getCreationTime() {
+        return creationTime;
     }
 
-    public void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
+    public void setCreationTime(long creationTime) {
+        this.creationTime = creationTime;
     }
 
     public int getMessageSize() {

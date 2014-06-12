@@ -91,9 +91,6 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
 
                 JID currentJID = new JID(user.getId()
                         + at + JiveGlobals.getProperty("xmpp.domain", "127.0.0.1"));
-                /*
-                group meta和group缓存默认存在时间为15分钟，此处若不考虑实时性可不进行缓存的清除，
-                如果不需要此缓存，可以设置最大数量和生存时间为-1
 
                 // 首先擦除对应的group meta缓存
                 Cache groupMetaCache = CacheFactory.createCache("Group Metadata Cache");
@@ -105,7 +102,8 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
                     for (String cachedGroupName : cachedGroupNames) {
                         groupCache.remove(cachedGroupName);
                     }
-                }*/
+                }
+
                 Collection<Group> groups = GroupManager.getInstance().getGroups(currentJID);
                 for (Group group : groups) {
                     Collection<JID> jidCollection = new ArrayList<JID>();

@@ -2,7 +2,6 @@ package org.daybreak.openfire.plugin.bridge.provider;
 
 import org.daybreak.openfire.plugin.bridge.model.History;
 import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
-import org.daybreak.openfire.plugin.bridge.utils.RedisUtil;
 import org.dom4j.io.SAXReader;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.user.UserManager;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 
-import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
@@ -56,10 +54,23 @@ public class BridgeHistoryMessageStore {
         if (message == null) {
             return;
         }
+
+        JID sent = message.getFrom();
         JID recipient = message.getTo();
-        String username = recipient.getNode();
+
+        String fromUserId = sent.getNode();
+        String toUserId = recipient.getNode();
+
         // If the username is null (such as when an anonymous user), don't store.
-        if (username == null || !UserManager.getInstance().isRegisteredUser(recipient)) {
+        if (fromUserId == null || !UserManager.getInstance().isRegisteredUser(sent)) {
+            return;
+        } else if (!XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(sent.getDomain())) {
+            // Do not store messages sent to users of remote servers
+            return;
+        }
+
+        // If the username is null (such as when an anonymous user), don't store.
+        if (toUserId == null || !UserManager.getInstance().isRegisteredUser(recipient)) {
             return;
         } else if (!XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(recipient.getDomain())) {
             // Do not store messages sent to users of remote servers
@@ -75,9 +86,10 @@ public class BridgeHistoryMessageStore {
         String msgXML = message.getElement().asXML();
 
         History history = new History();
-        history.setId(username + "_" + message.getID());
-        history.setUsername(username);
-        history.setCreationDate(new Date());
+        history.setId(fromUserId + "_" + toUserId + "_" + message.getID());
+        history.setFromUserId(fromUserId);
+        history.setToUserId(toUserId);
+        history.setCreationTime(System.currentTimeMillis());
         history.setMessageSize(msgXML.length());
         history.setStanza(msgXML);
 
