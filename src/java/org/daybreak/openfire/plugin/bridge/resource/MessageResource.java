@@ -69,9 +69,12 @@ public class MessageResource {
         Datastore datastore = MongoUtil.getInstance().getDatastore();
         Query query = datastore.createQuery(History.class)
                 .filter("fromUserId =", fromUserId)
-                .filter("toUserId =", toUserId)
-                .filter("creationTime <=", startTime)
-                .offset(start).limit(length);
+                .filter("toUserId =", toUserId);
+        if (startTime > 0) {
+            query = query.filter("creationTime <=", startTime);
+        }
+        query = query.offset(start).limit(length);
+
         List<History> historyList = query.asList();
         return mapper.writeValueAsString(historyList);
     }
