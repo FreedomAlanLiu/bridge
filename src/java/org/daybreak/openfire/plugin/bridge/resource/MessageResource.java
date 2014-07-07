@@ -73,7 +73,7 @@ public class MessageResource {
         if (startTime > 0) {
             query = query.filter("creationTime <=", startTime);
         }
-        query = query.offset(start).limit(length);
+        query = query.offset(start).limit(length).order("-creationTime");
 
         List<History> historyList = query.asList();
         return mapper.writeValueAsString(historyList);

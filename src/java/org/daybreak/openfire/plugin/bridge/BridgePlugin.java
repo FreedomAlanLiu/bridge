@@ -1,24 +1,30 @@
 package org.daybreak.openfire.plugin.bridge;
 
 import org.daybreak.openfire.plugin.bridge.provider.BridgeHistoryMessageStore;
+import org.daybreak.openfire.plugin.bridge.provider.BridgeMXParser;
 import org.daybreak.openfire.plugin.bridge.provider.BridgeOfflineMessageStore;
 import org.daybreak.openfire.plugin.bridge.resource.MessageResource;
 import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
 import org.daybreak.openfire.plugin.bridge.utils.RedisUtil;
+import org.dom4j.io.XMPPPacketReader;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.jivesoftware.openfire.OfflineMessageStore;
 import org.jivesoftware.openfire.XMPPServer;
+import org.jivesoftware.openfire.clearspace.ClearspaceManager;
 import org.jivesoftware.openfire.container.Module;
 import org.jivesoftware.openfire.container.Plugin;
 import org.jivesoftware.openfire.container.PluginManager;
 import org.jivesoftware.openfire.interceptor.InterceptorManager;
 import org.jivesoftware.openfire.interceptor.PacketInterceptor;
+import org.jivesoftware.openfire.net.MXParser;
 import org.jivesoftware.openfire.vcard.VCardManager;
 import org.jivesoftware.util.JiveGlobals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -183,4 +189,37 @@ public class BridgePlugin implements Plugin {
             ex.printStackTrace();
         }
     }
+
+    /*private void hackMXParser() {
+        try {
+            ThreadLocal<XMPPPacketReader> localParser = new ThreadLocal<XMPPPacketReader>() {
+                @Override
+                protected XMPPPacketReader initialValue() {
+                    XmlPullParserFactory factory = null;
+                    try {
+                        factory = XmlPullParserFactory.newInstance(BridgeMXParser.class.getName(), null);
+                        factory.setNamespaceAware(true);
+                    }
+                    catch (XmlPullParserException e) {
+                        Log.error("Error creating a parser factory", e);
+                    }
+                    XMPPPacketReader parser = new XMPPPacketReader();
+                    factory.setNamespaceAware(true);
+                    parser.setXPPFactory(factory);
+                    return parser;
+                }
+            };
+
+            Field localParserField = ClearspaceManager.class.getDeclaredField("localParser");
+            localParserField.setAccessible(true);
+            localParserField.set(ClearspaceManager.getInstance(), localParser);
+            Log.info("hackMXParser success!");
+        } catch (NoSuchFieldException e) {
+            Log.error(e.getMessage());
+        } catch (IllegalAccessException e) {
+            Log.error(e.getMessage());
+        }
+    }*/
+
+
 }

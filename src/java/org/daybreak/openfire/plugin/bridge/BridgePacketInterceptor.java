@@ -94,8 +94,7 @@ public class BridgePacketInterceptor implements PacketInterceptor {
                     article.setMessageType(MessageType.friend.toString());
                     List<Device> devices = bridgeService.findDevice(toUser.getId());
                     for (Device device : devices) {
-                        baiduYunService.pushMessage(device.getChannelId(), device.getBaiduUserId(),
-                                device.getDeviceType(), bridgeService.toJson(article));
+                        baiduYunService.pushMessage(device, bridgeService.toJson(article));
                     }
                 } catch (Exception e) {
                     logger.error("", e);

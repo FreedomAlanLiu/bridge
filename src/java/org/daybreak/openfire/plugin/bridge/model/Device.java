@@ -18,6 +18,9 @@ public class Device {
     @JsonProperty("channel_id")
     private Long channelId;
 
+    @JsonProperty("push_type")
+    private String pushType;
+
     @JsonProperty("device_type")
     private String deviceType;
 
@@ -51,5 +54,13 @@ public class Device {
 
     public void setDeviceType(String deviceType) {
         this.deviceType = deviceType;
+    }
+
+    public String getPushType() {
+        return pushType;
+    }
+
+    public void setPushType(String pushType) {
+        this.pushType = pushType;
     }
 }
