@@ -89,19 +89,21 @@ public class BaiduYunServiceImpl implements BaiduYunService {
         if ("appstore".equals(device.getPushType())) {
             pushMessage(getAppstoreChannelClinet(),
                     device.getChannelId(),
-                    device.getUserId(),
+                    device.getBaiduUserId(),
                     device.getDeviceType(),
                     message);
+            return;
         } else if ("nonappstore".equals(device.getPushType())) {
             pushMessage(getNonappstoreChannelCinet(),
                     device.getChannelId(),
-                    device.getUserId(),
+                    device.getBaiduUserId(),
                     device.getDeviceType(),
                     message);
+            return;
         }
         pushMessage(getTestChannelClient(),
                 device.getChannelId(),
-                device.getUserId(),
+                device.getBaiduUserId(),
                 device.getDeviceType(),
                 message);
     }
