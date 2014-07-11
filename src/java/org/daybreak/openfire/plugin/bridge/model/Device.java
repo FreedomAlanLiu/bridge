@@ -63,4 +63,15 @@ public class Device {
     public void setPushType(String pushType) {
         this.pushType = pushType;
     }
+
+    @Override
+    public String toString() {
+        return "Device{" +
+                "userId='" + userId + '\'' +
+                ", baiduUserId='" + baiduUserId + '\'' +
+                ", channelId=" + channelId +
+                ", pushType='" + pushType + '\'' +
+                ", deviceType='" + deviceType + '\'' +
+                '}';
+    }
 }

@@ -86,26 +86,25 @@ public class BaiduYunServiceImpl implements BaiduYunService {
 
     @Override
     public void pushMessage(Device device, String message) {
-        if ("appstore".equals(device.getPushType())) {
+        if ("appstore".equalsIgnoreCase(device.getPushType())) {
             pushMessage(getAppstoreChannelClinet(),
                     device.getChannelId(),
                     device.getBaiduUserId(),
                     device.getDeviceType(),
                     message);
-            return;
-        } else if ("nonappstore".equals(device.getPushType())) {
+        } else if ("nonappstore".equalsIgnoreCase(device.getPushType())) {
             pushMessage(getNonappstoreChannelCinet(),
                     device.getChannelId(),
                     device.getBaiduUserId(),
                     device.getDeviceType(),
                     message);
-            return;
+        } else {
+            pushMessage(getTestChannelClient(),
+                    device.getChannelId(),
+                    device.getBaiduUserId(),
+                    device.getDeviceType(),
+                    message);
         }
-        pushMessage(getTestChannelClient(),
-                device.getChannelId(),
-                device.getBaiduUserId(),
-                device.getDeviceType(),
-                message);
     }
 
     @Override
@@ -173,12 +172,17 @@ public class BaiduYunServiceImpl implements BaiduYunService {
         request.setTagName(tagName);
         request.setMessage(message);
 
+        boolean responseSuccess = false;
+
         // 调用pushMessage接口
         try {
             PushTagMessageResponse response = getTestChannelClient()
                     .pushTagMessage(request);
             // 认证推送成功
             logger.info("push amount : " + response.getSuccessAmount());
+            if (response.getSuccessAmount() >= 0) {
+                responseSuccess = true;
+            }
         } catch (ChannelClientException e) {
             // 处理客户端错误异常
             logger.error("channel client error", e);
@@ -189,11 +193,18 @@ public class BaiduYunServiceImpl implements BaiduYunService {
                     e.getRequestId(), e.getErrorCode(), e.getErrorMsg()));
         }
 
+        if (responseSuccess) {
+            return;
+        }
+
         try {
             PushTagMessageResponse response = getAppstoreChannelClinet()
                     .pushTagMessage(request);
             // 认证推送成功
             logger.info("push amount : " + response.getSuccessAmount());
+            if (response.getSuccessAmount() >= 0) {
+                responseSuccess = true;
+            }
         } catch (ChannelClientException e) {
             // 处理客户端错误异常
             logger.error("channel client error", e);
@@ -202,6 +213,10 @@ public class BaiduYunServiceImpl implements BaiduYunService {
             logger.error(String.format(
                     "request_id: %d, error_code: %d, error_message: %s",
                     e.getRequestId(), e.getErrorCode(), e.getErrorMsg()));
+        }
+
+        if (responseSuccess) {
+            return;
         }
 
         try {

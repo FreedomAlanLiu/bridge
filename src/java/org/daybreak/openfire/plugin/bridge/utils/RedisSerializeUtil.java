@@ -15,7 +15,7 @@ public class RedisSerializeUtil {
     public static final Kryo kryo = new Kryo();
 
     //序列化
-    /*public static byte[] jserialize(Object object) throws IOException, ClassNotFoundException {
+    public static byte[] jserialize(Object object) throws IOException, ClassNotFoundException {
         ObjectOutputStream objectOutputStream = null;
         ByteArrayOutputStream byteArrayOutputStream = null;
         try {
@@ -65,7 +65,7 @@ public class RedisSerializeUtil {
                 }
             }
         }
-    }*/
+    }
 
     // 基于kryo序列化
     public static byte[] kryoSerialize(Object t) {

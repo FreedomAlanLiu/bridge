@@ -12,7 +12,6 @@ import org.daybreak.openfire.plugin.bridge.model.AccessToken;
 import org.daybreak.openfire.plugin.bridge.model.Membership;
 import org.daybreak.openfire.plugin.bridge.model.User;
 import org.daybreak.openfire.plugin.bridge.utils.HttpConnectionManager;
-import org.daybreak.openfire.plugin.bridge.utils.RedisUtil;
 
 import java.io.IOException;
 import java.util.*;
@@ -25,11 +24,11 @@ public class BridgeServiceImpl implements BridgeService {
     private ObjectMapper mapper = new ObjectMapper();
 
     // 此cache目前作为永久性的cache而存在，考虑使用第三方缓存数据库（如redis）来存储
-    /*private Map<String, User> idUserCache;
+    private Map<String, User> idUserCache;
 
     public BridgeServiceImpl() {
         idUserCache = new HashMap<String, User>();
-    }*/
+    }
 
     @Override
     public List<User> findConnections(String token) throws Exception {
@@ -98,7 +97,8 @@ public class BridgeServiceImpl implements BridgeService {
                     User.class
             );
             user.setAccessToken(token);
-            RedisUtil.getInstance().setUser(user);
+            // RedisUtil.getInstance().setUser(user);
+            idUserCache.put(user.getId(), user);
             return user;
         } finally {
             httpConnectionManager.close();
@@ -117,7 +117,8 @@ public class BridgeServiceImpl implements BridgeService {
                             + "/api/v1/users/" + id, tokenParameters),
                     User.class
             );
-            RedisUtil.getInstance().setUser(user);
+            // RedisUtil.getInstance().setUser(user);
+            idUserCache.put(user.getId(), user);
             return user;
         } finally {
             httpConnectionManager.close();
@@ -145,8 +146,9 @@ public class BridgeServiceImpl implements BridgeService {
                     user.setId(userId);
                 }
                 user.setAccessToken(accessToken.getAccessToken());
-                RedisUtil.getInstance().setUser(user);
-                RedisUtil.getInstance().setOneToken(accessToken.getAccessToken());
+                // RedisUtil.getInstance().setUser(user);
+                // RedisUtil.getInstance().setOneToken(accessToken.getAccessToken());
+                idUserCache.put(user.getId(), user);
                 return accessToken.getAccessToken();
             } else {
                 throw new BridgeException(accessToken.getError(), accessToken.getErrorDescription());
@@ -171,7 +173,8 @@ public class BridgeServiceImpl implements BridgeService {
 
     @Override
     public User loadUser(String userId) throws Exception {
-        return RedisUtil.getInstance().getUser(userId);
+        // return RedisUtil.getInstance().getUser(userId);
+        return idUserCache.get(userId);
     }
 
     @Override
@@ -188,7 +191,12 @@ public class BridgeServiceImpl implements BridgeService {
 
     @Override
     public String getOneToken() throws Exception {
-        return RedisUtil.getInstance().getOneToken();
+        for (User u : idUserCache.values()) {
+            if (u != null && u.getAccessToken() != null) {
+                return u.getAccessToken();
+            }
+        }
+        return null;
     }
 
     @Override
