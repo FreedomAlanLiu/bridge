@@ -62,18 +62,26 @@ public class BridgeHistoryMessageStore {
         String toUserId = recipient.getNode();
 
         // If the username is null (such as when an anonymous user), don't store.
-        if (fromUserId == null || !UserManager.getInstance().isRegisteredUser(sent)) {
+        /*if (fromUserId == null || !UserManager.getInstance().isRegisteredUser(sent)) {
             return;
         } else if (!XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(sent.getDomain())) {
             // Do not store messages sent to users of remote servers
             return;
+        }*/
+        if (fromUserId == null
+                || !XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(sent.getDomain())) {
+            return;
         }
 
         // If the username is null (such as when an anonymous user), don't store.
-        if (toUserId == null || !UserManager.getInstance().isRegisteredUser(recipient)) {
+        /*if (toUserId == null || !UserManager.getInstance().isRegisteredUser(recipient)) {
             return;
         } else if (!XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(recipient.getDomain())) {
             // Do not store messages sent to users of remote servers
+            return;
+        }*/
+        if (toUserId == null
+                || !XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(recipient.getDomain())) {
             return;
         }
 
@@ -93,11 +101,24 @@ public class BridgeHistoryMessageStore {
         history.setMessageSize(msgXML.length());
         history.setStanza(msgXML);
 
+        // 保存历史消息
         try {
             MongoUtil mongoUtil = MongoUtil.getInstance();
             mongoUtil.getDatastore().save(history);
-        } catch (Exception e) {
-            Log.error(LocaleUtils.getLocalizedString("admin.error"), e);
+        } catch (Exception e1) {
+            Log.error("Failed to save history message!Try again!", e1);
+            try {
+                MongoUtil mongoUtil = MongoUtil.getInstance();
+                mongoUtil.getDatastore().save(history);
+            } catch (Exception e2) {
+                Log.error("Failed to save history message!Try again!", e2);
+                try {
+                    MongoUtil mongoUtil = MongoUtil.getInstance();
+                    mongoUtil.getDatastore().save(history);
+                } catch (Exception e3) {
+                    Log.error("Failed to save history message!", e3);
+                }
+            }
         }
     }
 
