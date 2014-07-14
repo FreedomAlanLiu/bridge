@@ -14,4 +14,6 @@ public interface BaiduYunService {
                             String message);
 
     public void pushTagMessage(String tagName, String deviceTypeStr, String message);
+
+    public void pushBroadcastMessage(String groupId, String message);
 }

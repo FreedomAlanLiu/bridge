@@ -67,7 +67,7 @@ public class BridgePlugin implements Plugin {
         }
 
         // hack offline message store
-        hackOfflineMessageStore();
+        // hackOfflineMessageStore();
 
         // 添加消息拦截器
         bridgePacketInterceptor = new BridgePacketInterceptor();

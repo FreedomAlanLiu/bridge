@@ -148,7 +148,7 @@ public class BridgeRosterItemProvider implements RosterItemProvider {
 
     private List<org.daybreak.openfire.plugin.bridge.model.User> getConnections(String userId) {
         try {
-            BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");;
+            BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
             String token = bridgeService.getToken(userId);
             if (StringUtils.isNotEmpty(token)) {
                 List<org.daybreak.openfire.plugin.bridge.model.User> connections = bridgeService.findConnections(token);

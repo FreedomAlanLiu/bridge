@@ -10,12 +10,21 @@ import com.baidu.yun.channel.model.PushUnicastMessageRequest;
 import com.baidu.yun.channel.model.PushUnicastMessageResponse;
 import com.baidu.yun.core.log.YunLogEvent;
 import com.baidu.yun.core.log.YunLogHandler;
+import org.daybreak.openfire.plugin.bridge.BridgeServiceFactory;
 import org.daybreak.openfire.plugin.bridge.model.Device;
 import org.daybreak.openfire.plugin.bridge.model.DeviceType;
 import org.daybreak.openfire.plugin.bridge.service.BaiduYunService;
+import org.daybreak.openfire.plugin.bridge.service.BridgeService;
+import org.jivesoftware.openfire.group.Group;
+import org.jivesoftware.openfire.group.GroupManager;
+import org.jivesoftware.openfire.group.GroupNotFoundException;
 import org.jivesoftware.util.JiveGlobals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmpp.packet.JID;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by Alan on 2014/4/20.
@@ -147,6 +156,30 @@ public class BaiduYunServiceImpl implements BaiduYunService {
             logger.error(String.format(
                     "request_id: %d, error_code: %d, error_message: %s",
                     e.getRequestId(), e.getErrorCode(), e.getErrorMsg()));
+        }
+    }
+
+    @Override
+    public void pushBroadcastMessage(String groupId, String message) {
+        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
+        GroupManager groupManager = GroupManager.getInstance();
+        try {
+            Group group = groupManager.getGroup(groupId);
+            Collection<JID> members = group.getMembers();
+            for (JID jid : members) {
+                try {
+                    List<Device> devices = bridgeService.findDevice(jid.getNode());
+                    logger.info("devices size: " + devices.size());
+                    for (Device device : devices) {
+                        logger.info(devices.toString());
+                        pushMessage(device, message);
+                    }
+                } catch (Exception e) {
+                    logger.error("", e);
+                }
+            }
+        } catch (GroupNotFoundException e) {
+            logger.error("Group not found.", e);
         }
     }
 
