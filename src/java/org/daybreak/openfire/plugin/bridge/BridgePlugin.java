@@ -3,6 +3,7 @@ package org.daybreak.openfire.plugin.bridge;
 import org.daybreak.openfire.plugin.bridge.provider.BridgeHistoryMessageStore;
 import org.daybreak.openfire.plugin.bridge.provider.BridgeMXParser;
 import org.daybreak.openfire.plugin.bridge.provider.BridgeOfflineMessageStore;
+import org.daybreak.openfire.plugin.bridge.resource.GroupResource;
 import org.daybreak.openfire.plugin.bridge.resource.MessageResource;
 import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
 import org.daybreak.openfire.plugin.bridge.utils.RedisUtil;
@@ -87,6 +88,7 @@ public class BridgePlugin implements Plugin {
         // in com.example package
         final ResourceConfig rc = new ResourceConfig();
         rc.register(MessageResource.class);
+        rc.register(GroupResource.class);
 
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI

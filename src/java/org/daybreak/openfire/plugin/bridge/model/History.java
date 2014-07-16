@@ -17,6 +17,7 @@ public class History {
     private long creationTime;
     private int messageSize;
     private String stanza;
+    private String messageType;// chat or groupchat
 
     public String getToUserId() {
         return toUserId;
@@ -64,5 +65,13 @@ public class History {
 
     public void setStanza(String stanza) {
         this.stanza = stanza;
+    }
+
+    public String getMessageType() {
+        return messageType;
+    }
+
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
     }
 }

@@ -6,12 +6,16 @@ import org.daybreak.openfire.plugin.bridge.service.BridgeService;
 import org.daybreak.openfire.plugin.bridge.BridgeServiceFactory;
 import org.jivesoftware.openfire.group.AbstractGroupProvider;
 import org.jivesoftware.openfire.group.Group;
+import org.jivesoftware.openfire.group.GroupManager;
 import org.jivesoftware.openfire.group.GroupNotFoundException;
 import org.jivesoftware.util.JiveGlobals;
+import org.jivesoftware.util.cache.Cache;
+import org.jivesoftware.util.cache.CacheFactory;
 import org.xmpp.packet.JID;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -73,5 +77,57 @@ public class BridgeGroupProvider extends AbstractGroupProvider {
             throw new RuntimeException(e);
         }
         return groupNames;
+    }
+
+    @Override
+    public void addMember(String groupName, JID user, boolean administrator) {
+        Cache groupCache = CacheFactory.createCache("Group");
+        Group group = (Group) groupCache.get(groupName);
+        if (group != null) {
+            Collection<JID> members = group.getMembers();
+            boolean isContainsUser = false;
+            for (JID member : members) {
+                if (member.getNode().equals(user.getNode())
+                        && member.getDomain().equals(user.getDomain())) {
+                    isContainsUser = true;
+                    break;
+                }
+            }
+            if (!isContainsUser) {
+                members.add(user);
+            }
+        }
+    }
+
+    @Override
+    public void deleteMember(String groupName, JID user) {
+        Cache groupCache = CacheFactory.createCache("Group");
+        Group group = (Group) groupCache.get(groupName);
+        if (group != null) {
+            Collection<JID> members = group.getMembers();
+            Iterator<JID> memberIterator = members.iterator();
+            while (memberIterator.hasNext()) {
+                JID member = memberIterator.next();
+                if (member.getNode().equals(user.getNode())
+                        && member.getDomain().equals(user.getDomain())) {
+                    memberIterator.remove();
+                    break;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void deleteGroup(String name) {
+        Cache groupCache = CacheFactory.createCache("Group");
+        Group group = (Group) groupCache.get(name);
+        if (group != null) {
+            groupCache.remove(name);
+        }
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return false;
     }
 }

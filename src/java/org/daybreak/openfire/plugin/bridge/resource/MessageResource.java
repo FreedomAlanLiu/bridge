@@ -47,6 +47,7 @@ public class MessageResource {
     @Produces(MediaType.APPLICATION_JSON)
     public String get(@QueryParam("fromUserId") String fromUserId,
                       @QueryParam("toUserId") String toUserId,
+                      @QueryParam("messageType") @DefaultValue("chat") String messageType,
                       @QueryParam("token") String token,
                       @QueryParam("startTime") long startTime,
                       @QueryParam("start") int start,
@@ -69,7 +70,8 @@ public class MessageResource {
         Datastore datastore = MongoUtil.getInstance().getDatastore();
         Query query = datastore.createQuery(History.class)
                 .filter("fromUserId =", fromUserId)
-                .filter("toUserId =", toUserId);
+                .filter("toUserId =", toUserId)
+                .filter("messageType =", messageType);
         if (startTime > 0) {
             query = query.filter("creationTime <=", startTime);
         }

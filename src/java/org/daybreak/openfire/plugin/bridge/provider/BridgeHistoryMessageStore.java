@@ -5,6 +5,7 @@ import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
 import org.dom4j.io.SAXReader;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.user.UserManager;
+import org.jivesoftware.util.JiveGlobals;
 import org.jivesoftware.util.LocaleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +101,14 @@ public class BridgeHistoryMessageStore {
         history.setCreationTime(System.currentTimeMillis());
         history.setMessageSize(msgXML.length());
         history.setStanza(msgXML);
+
+        String prefix = JiveGlobals.getProperty("plugin.broadcast.messagePrefix", "(broadcast)");
+        if (message.getType() == Message.Type.groupchat
+                || message.getBody().startsWith(prefix)) {
+            history.setMessageType("groupchat");
+        } else {
+            history.setMessageType("chat");
+        }
 
         // 保存历史消息
         try {
