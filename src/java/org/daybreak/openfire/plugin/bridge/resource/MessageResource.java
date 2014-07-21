@@ -102,10 +102,18 @@ public class MessageResource {
         }
 
         Datastore datastore = MongoUtil.getInstance().getDatastore();
-        Query query = datastore.createQuery(History.class)
-                .filter("fromUserId =", fromUserId)
-                .filter("toUserId =", toUserId)
+        Query<History> query = datastore.createQuery(History.class)
                 .filter("messageType =", "chat");
+        query.or(
+                query.and(
+                        query.criteria("fromUserId").equal(fromUserId),
+                        query.criteria("toUserId").equal(toUserId)
+                ),
+                query.and(
+                        query.criteria("fromUserId").equal(toUserId),
+                        query.criteria("toUserId").equal(fromUserId)
+                )
+        );
         if (startTime > 0) {
             query = query.filter("creationTime <=", startTime);
         }
