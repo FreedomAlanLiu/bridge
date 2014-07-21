@@ -37,10 +37,11 @@ public class BridgePacketInterceptor implements PacketInterceptor {
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-                if (incoming && (packet instanceof Message)) {
+                if (incoming && !processed && (packet instanceof Message)) {
                     JID toJID = packet.getTo();
+                    String body = ((Message) packet).getBody();
                     try {
-                        if (toJID != null && XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(toJID.getDomain())) {
+                        if (toJID != null && body != null) {
                             logger.info("incoming message:" + packet.toXML());
                             BridgeHistoryMessageStore.getInstance().addMessage((Message) packet);
                         }

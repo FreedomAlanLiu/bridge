@@ -62,27 +62,7 @@ public class BridgeHistoryMessageStore {
         String fromUserId = sent.getNode();
         String toUserId = recipient.getNode();
 
-        // If the username is null (such as when an anonymous user), don't store.
-        /*if (fromUserId == null || !UserManager.getInstance().isRegisteredUser(sent)) {
-            return;
-        } else if (!XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(sent.getDomain())) {
-            // Do not store messages sent to users of remote servers
-            return;
-        }*/
-        if (fromUserId == null
-                || !XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(sent.getDomain())) {
-            return;
-        }
-
-        // If the username is null (such as when an anonymous user), don't store.
-        /*if (toUserId == null || !UserManager.getInstance().isRegisteredUser(recipient)) {
-            return;
-        } else if (!XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(recipient.getDomain())) {
-            // Do not store messages sent to users of remote servers
-            return;
-        }*/
-        if (toUserId == null
-                || !XMPPServer.getInstance().getServerInfo().getXMPPDomain().equals(recipient.getDomain())) {
+        if (fromUserId == null || toUserId == null) {
             return;
         }
 
@@ -95,22 +75,33 @@ public class BridgeHistoryMessageStore {
         String msgXML = message.getElement().asXML();
 
         History history = new History();
-        history.setId(fromUserId + "_" + toUserId + "_" + message.getID());
         history.setFromUserId(fromUserId);
         history.setToUserId(toUserId);
         history.setCreationTime(System.currentTimeMillis());
         history.setMessageSize(msgXML.length());
         history.setStanza(msgXML);
 
-        String prefix = JiveGlobals.getProperty("plugin.broadcast.messagePrefix", "(broadcast)");
-        if (message.getType() == Message.Type.groupchat
-                || message.getBody().startsWith(prefix)) {
+        String broadcastServiceName = JiveGlobals.getProperty("plugin.broadcast.serviceName", "broadcast");
+        if (recipient.getDomain().startsWith(broadcastServiceName)) {
+            String groupId = recipient.getNode();
+            history.setGroupId(groupId);
+            history.setId(groupId + "_" + history.getCreationTime());
             history.setMessageType("groupchat");
         } else {
+            // 经过broadcast插件解析过后的含有前缀消息不存储
+            String prefix = JiveGlobals.getProperty("plugin.broadcast.messagePrefix", "(broadcast)");
+            if (message.getBody().startsWith(prefix)) {
+                return;
+            }
+
+            history.setId(fromUserId + "_" + toUserId + "_" + history.getCreationTime());
             history.setMessageType("chat");
         }
 
+        Log.info("History: " + history.toString());
+
         // 保存历史消息
+        // 是否要重试呢？
         try {
             MongoUtil mongoUtil = MongoUtil.getInstance();
             mongoUtil.getDatastore().save(history);

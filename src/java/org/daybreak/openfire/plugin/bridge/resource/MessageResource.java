@@ -44,10 +44,44 @@ public class MessageResource {
     String broadMessagePrefix = JiveGlobals.getProperty("plugin.broadcast.messagePrefix", "(broadcast)");
 
     @GET
+    @Path("/groupchat")
     @Produces(MediaType.APPLICATION_JSON)
-    public String get(@QueryParam("fromUserId") String fromUserId,
+    public String getGroupChatMessages(@QueryParam("groupId") String groupId,
+                                  @QueryParam("toUserId") String toUserId,
+                                  @QueryParam("token") String token,
+                                  @QueryParam("startTime") long startTime,
+                                  @QueryParam("start") int start,
+                                  @QueryParam("length") int length) throws IOException {
+
+        BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
+        try {
+            User u = bridgeService.findUser(toUserId, token);
+            if (u == null) {
+                logger.warn("token validation failed!");
+                return "{\"result\": \"error\", \"cause\": \"token validation failed!\"}";
+            }
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+
+        Datastore datastore = MongoUtil.getInstance().getDatastore();
+        Query query = datastore.createQuery(History.class)
+                .filter("groupId =", groupId)
+                .filter("messageType =", "groupchat");
+        if (startTime > 0) {
+            query = query.filter("creationTime <=", startTime);
+        }
+        query = query.offset(start).limit(length).order("-creationTime");
+
+        List<History> historyList = query.asList();
+        return mapper.writeValueAsString(historyList);
+    }
+
+    @GET
+    @Path("/chat")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getChatMessages(@QueryParam("fromUserId") String fromUserId,
                       @QueryParam("toUserId") String toUserId,
-                      @QueryParam("messageType") @DefaultValue("chat") String messageType,
                       @QueryParam("token") String token,
                       @QueryParam("startTime") long startTime,
                       @QueryParam("start") int start,
@@ -71,7 +105,7 @@ public class MessageResource {
         Query query = datastore.createQuery(History.class)
                 .filter("fromUserId =", fromUserId)
                 .filter("toUserId =", toUserId)
-                .filter("messageType =", messageType);
+                .filter("messageType =", "chat");
         if (startTime > 0) {
             query = query.filter("creationTime <=", startTime);
         }
