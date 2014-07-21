@@ -2,16 +2,18 @@ package org.daybreak.openfire.plugin.bridge.provider;
 
 import org.daybreak.openfire.plugin.bridge.model.History;
 import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
 import org.jivesoftware.openfire.XMPPServer;
-import org.jivesoftware.openfire.user.UserManager;
 import org.jivesoftware.util.JiveGlobals;
-import org.jivesoftware.util.LocaleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
+import org.xmpp.packet.PacketExtension;
 
+import java.io.StringReader;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
@@ -98,26 +100,38 @@ public class BridgeHistoryMessageStore {
             history.setMessageType("chat");
         }
 
-        Log.info("History: " + history.toString());
+        boolean isSaveSuccess = false;
 
         // 保存历史消息
         // 是否要重试呢？
         try {
             MongoUtil mongoUtil = MongoUtil.getInstance();
             mongoUtil.getDatastore().save(history);
-        } catch (Exception e1) {
-            Log.error("Failed to save history message!Try again!", e1);
+            isSaveSuccess = true;
+        } catch (Exception e) {
+            Log.error("Failed to save history message!Try again!", e);
+        }
+
+        if (!isSaveSuccess) {
+            return;
+        }
+
+        // 消息时间回执
+        PacketExtension requestTimestampExtension = message.getExtension(TimestampReceiptRequest.ELEMENT_NAME,
+                TimestampReceiptRequest.NAMESPACE);
+        if (requestTimestampExtension != null) {
+            Message response = new Message();
+            response.setTo(sent);
+
+            TimestampResponseExtension timestampResponseExtension = new TimestampResponseExtension(message.getID(),
+                    history.getCreationTime());
+            SAXReader saxReader = new SAXReader();
             try {
-                MongoUtil mongoUtil = MongoUtil.getInstance();
-                mongoUtil.getDatastore().save(history);
-            } catch (Exception e2) {
-                Log.error("Failed to save history message!Try again!", e2);
-                try {
-                    MongoUtil mongoUtil = MongoUtil.getInstance();
-                    mongoUtil.getDatastore().save(history);
-                } catch (Exception e3) {
-                    Log.error("Failed to save history message!", e3);
-                }
+                Document doc = saxReader.read(new StringReader(timestampResponseExtension.toXML()));
+                response.addExtension(new PacketExtension(doc.getRootElement()));
+                XMPPServer.getInstance().getRoutingTable().routePacket(sent, response, true);
+            } catch (DocumentException e) {
+                Log.error("Error reading extension xml!", e);
             }
         }
     }
