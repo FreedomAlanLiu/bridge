@@ -9,9 +9,13 @@ import org.mongodb.morphia.annotations.Id;
 @Entity
 public class History {
 
+    public static String CHAT = "chat";
+    public static String GROUP_CHAT = "groupchat";
+
     @Id
     private String id;
 
+    private String messageId;
     private String fromUserId;
     private String toUserId;
     private long creationTime;
@@ -82,5 +86,13 @@ public class History {
 
     public void setGroupId(String groupId) {
         this.groupId = groupId;
+    }
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
     }
 }

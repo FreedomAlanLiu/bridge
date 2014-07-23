@@ -14,6 +14,7 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.PacketExtension;
 
 import java.io.StringReader;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
@@ -77,6 +78,8 @@ public class BridgeHistoryMessageStore {
         String msgXML = message.getElement().asXML();
 
         History history = new History();
+        history.setId(UUID.randomUUID().toString());
+        history.setMessageId(message.getID());
         history.setFromUserId(fromUserId);
         history.setToUserId(toUserId);
         history.setCreationTime(System.currentTimeMillis());
@@ -87,17 +90,14 @@ public class BridgeHistoryMessageStore {
         if (recipient.getDomain().startsWith(broadcastServiceName)) {
             String groupId = recipient.getNode();
             history.setGroupId(groupId);
-            history.setId(groupId + "_" + history.getCreationTime());
-            history.setMessageType("groupchat");
+            history.setMessageType(History.GROUP_CHAT);
         } else {
             // 经过broadcast插件解析过后的含有前缀消息不存储
             String prefix = JiveGlobals.getProperty("plugin.broadcast.messagePrefix", "(broadcast)");
             if (message.getBody().startsWith(prefix)) {
                 return;
             }
-
-            history.setId(fromUserId + "_" + toUserId + "_" + history.getCreationTime());
-            history.setMessageType("chat");
+            history.setMessageType(History.CHAT);
         }
 
         boolean isSaveSuccess = false;
@@ -121,14 +121,17 @@ public class BridgeHistoryMessageStore {
                 TimestampReceiptRequest.NAMESPACE);
         if (requestTimestampExtension != null) {
             Message response = new Message();
+            response.setFrom("server@" + XMPPServer.getInstance().getServerInfo().getXMPPDomain());
             response.setTo(sent);
+            response.setType(Message.Type.chat);
 
             TimestampResponseExtension timestampResponseExtension = new TimestampResponseExtension(message.getID(),
                     history.getCreationTime());
             SAXReader saxReader = new SAXReader();
             try {
                 Document doc = saxReader.read(new StringReader(timestampResponseExtension.toXML()));
-                response.addExtension(new PacketExtension(doc.getRootElement()));
+                PacketExtension timestampExtension = new PacketExtension(doc.getRootElement());
+                response.addExtension(timestampExtension);
                 XMPPServer.getInstance().getRoutingTable().routePacket(sent, response, true);
             } catch (DocumentException e) {
                 Log.error("Error reading extension xml!", e);
