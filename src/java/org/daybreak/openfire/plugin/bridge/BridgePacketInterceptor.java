@@ -12,6 +12,7 @@ import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
+import org.jivesoftware.openfire.MessageRouter;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.interceptor.PacketInterceptor;
 import org.jivesoftware.openfire.interceptor.PacketRejectedException;
@@ -27,7 +28,6 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketExtension;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,54 +43,27 @@ public class BridgePacketInterceptor implements PacketInterceptor {
 
     public void interceptPacket(final Packet packet, final Session session, final boolean incoming,
                                 final boolean processed) throws PacketRejectedException {
+
+        if (incoming && !processed && (packet instanceof Message)) {
+            JID toJID = packet.getTo();
+            String body = ((Message) packet).getBody();
+            try {
+                if (toJID != null && body != null) {
+                    logger.info("incoming message:" + packet.toXML());
+                    BridgeHistoryMessageStore.getInstance().addMessage((Message) packet);
+                }
+            } catch (Exception e) {
+                logger.error("", e);
+            }
+        }
+
+        if (incoming && processed && (packet instanceof Message)) {
+            logger.info("processed message:" + packet.toXML());
+        }
+
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-                if (incoming && !processed && (packet instanceof Message)) {
-                    JID toJID = packet.getTo();
-                    String body = ((Message) packet).getBody();
-                    try {
-                        if (toJID != null && body != null) {
-                            logger.info("incoming message:" + packet.toXML());
-                            BridgeHistoryMessageStore.getInstance().addMessage((Message) packet);
-                        }
-                    } catch (Exception e) {
-                        logger.error("", e);
-                    }
-                }
-
-                if (incoming && processed && (packet instanceof Message)) {
-                    logger.info("processed message:" + packet.toXML());
-                    Message message = (Message) packet;
-                    PacketExtension requestTimestampExtension = message.getExtension(TimestampReceiptRequest.ELEMENT_NAME,
-                            TimestampReceiptRequest.NAMESPACE);
-                    if (requestTimestampExtension != null) {
-                        Message response = new Message();
-                        response.setFrom("server@" + XMPPServer.getInstance().getServerInfo().getXMPPDomain());
-                        response.setTo(message.getTo());
-                        response.setType(Message.Type.chat);
-
-                        Datastore datastore = MongoUtil.getInstance().getDatastore();
-                        Query<History> query = datastore.createQuery(History.class)
-                                .filter("messageId =", message.getID());
-                        List<History> historyList = query.asList();
-                        if (historyList.size() > 0) {
-                            History history = historyList.get(0);
-                            TimestampResponseExtension timestampResponseExtension = new TimestampResponseExtension(message.getID(),
-                                    history.getCreationTime());
-                            SAXReader saxReader = new SAXReader();
-                            try {
-                                Document doc = saxReader.read(new StringReader(timestampResponseExtension.toXML()));
-                                PacketExtension timestampExtension = new PacketExtension(doc.getRootElement());
-                                response.addExtension(timestampExtension);
-                                XMPPServer.getInstance().getRoutingTable().routePacket(message.getTo(), response, true);
-                            } catch (DocumentException e) {
-                                logger.error("Error reading extension xml!", e);
-                            }
-                        }
-                    }
-                }
-
                 boolean bccsActivate = JiveGlobals.getBooleanProperty("plugin.bridge.bccs.activate", false);
                 if (!bccsActivate || !incoming || !processed) {
                     return;

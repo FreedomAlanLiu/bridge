@@ -129,10 +129,13 @@ public class BridgeHistoryMessageStore {
                     history.getCreationTime());
             SAXReader saxReader = new SAXReader();
             try {
-                Document doc = saxReader.read(new StringReader(timestampResponseExtension.toXML()));
-                PacketExtension timestampExtension = new PacketExtension(doc.getRootElement());
-                response.addExtension(timestampExtension);
+                Document resDoc = saxReader.read(new StringReader(timestampResponseExtension.toXML()));
+                response.addExtension(new PacketExtension(resDoc.getRootElement()));
                 XMPPServer.getInstance().getRoutingTable().routePacket(sent, response, true);
+
+                message.deleteExtension(TimestampReceiptRequest.ELEMENT_NAME, TimestampReceiptRequest.NAMESPACE);
+                Document msgDoc = saxReader.read(new StringReader(timestampResponseExtension.toXML()));
+                message.addExtension(new PacketExtension(msgDoc.getRootElement()));
             } catch (DocumentException e) {
                 Log.error("Error reading extension xml!", e);
             }
