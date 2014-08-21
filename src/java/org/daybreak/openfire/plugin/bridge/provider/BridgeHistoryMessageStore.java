@@ -1,6 +1,8 @@
 package org.daybreak.openfire.plugin.bridge.provider;
 
 import org.daybreak.openfire.plugin.bridge.model.History;
+import org.daybreak.openfire.plugin.bridge.resource.MessageExtension;
+import org.daybreak.openfire.plugin.bridge.resource.MessageResource;
 import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -69,8 +71,9 @@ public class BridgeHistoryMessageStore {
             return;
         }
 
-        // 如何body为空不存储
-        if (message.getBody() == null) {
+        // 空message且不是自定义扩展消息不存储
+        if (message.getBody() == null
+                && message.getExtension(MessageExtension.ELEMENT_NAME, MessageExtension.NAMESPACE) == null) {
             return;
         }
 
