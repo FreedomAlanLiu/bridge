@@ -129,7 +129,7 @@ public class HttpConnectionManager {
      * @return
      */
     public HttpResponse getHttpRequest(String url, List<NameValuePair> parameters) throws IOException {
-        Log.debug("------------------------------------------------------------------------");
+        Log.info("------------------------------------------------------------------------");
         if (parameters != null && parameters.size() > 0) {
             String paramURL = URLEncodedUtils.format(parameters, HTTP.UTF_8);
             if (url.indexOf("?") > -1) {
@@ -138,7 +138,7 @@ public class HttpConnectionManager {
                 url = url + "?" + paramURL;
             }
         }
-        Log.debug("GET URL: " + url);
+        Log.info("GET URL: " + url);
 
         HttpGet httpGet = new HttpGet(url);
 
@@ -149,9 +149,9 @@ public class HttpConnectionManager {
         httpGet.setConfig(requestConfigBuilder.build());
 
         if (parameters != null) {
-            Log.debug(" + Request parameters: ");
+            Log.info(" + Request parameters: ");
             for (NameValuePair param : parameters) {
-                Log.debug("   - " + param.getName() + " : " + param.getValue());
+                Log.info("   - " + param.getName() + " : " + param.getValue());
             }
         }
         Log.debug(" + Request headers: ");
@@ -164,7 +164,10 @@ public class HttpConnectionManager {
         for (Header header : response.getAllHeaders()) {
             Log.debug("   - " + header.getName() + " : " + header.getValue());
         }
-        Log.debug("***********************************************************************");
+
+        Log.info("Response status code: " + response.getStatusLine().getStatusCode());
+
+        Log.info("***********************************************************************");
         return response;
     }
 
@@ -241,16 +244,16 @@ public class HttpConnectionManager {
      * @return
      */
     public HttpResponse postHttpRequest(String url, List<NameValuePair> parameters) throws IOException {
-        Log.debug("------------------------------------------------------------------------");
-        Log.debug("POST URL: " + url);
+        Log.info("------------------------------------------------------------------------");
+        Log.info("POST URL: " + url);
 
         HttpPost httpPost = createHttpPost(url, parameters);
 
         if (parameters != null) {
-            Log.debug(" + Request parameters: ");
+            Log.info(" + Request parameters: ");
 
             for (NameValuePair param : parameters) {
-                Log.debug("   - " + param.getName() + " : " + param.getValue());
+                Log.info("   - " + param.getName() + " : " + param.getValue());
             }
         }
         Log.debug(" + Request headers: ");
@@ -263,7 +266,10 @@ public class HttpConnectionManager {
         for (Header header : response.getAllHeaders()) {
             Log.debug("   - " + header.getName() + " : " + header.getValue());
         }
-        Log.debug("***********************************************************************");
+
+        Log.info("Response status code: " + response.getStatusLine().getStatusCode());
+
+        Log.info("***********************************************************************");
         return response;
     }
 
