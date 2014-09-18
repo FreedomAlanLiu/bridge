@@ -71,10 +71,12 @@ public class BridgeHistoryMessageStore {
             return;
         }
 
-        // 空message且不是自定义扩展消息不存储
-        if (message.getBody() == null
-                && message.getExtension(MessageExtension.ELEMENT_NAME, MessageExtension.NAMESPACE) == null) {
-            return;
+        // 无需存储的消息
+        if (message.getBody() == null) {
+            if (message.getExtension(MessageExtension.ELEMENT_NAME, MessageExtension.NAMESPACE) == null
+                    || message.getExtension("data", "urn:xmpp:bob") == null) {
+                return;
+            }
         }
 
         // Get the message in XML format.
