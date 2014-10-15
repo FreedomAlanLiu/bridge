@@ -1,31 +1,26 @@
 package org.daybreak.openfire.plugin.bridge;
 
 import org.daybreak.openfire.plugin.bridge.provider.BridgeHistoryMessageStore;
-import org.daybreak.openfire.plugin.bridge.provider.BridgeMXParser;
 import org.daybreak.openfire.plugin.bridge.provider.BridgeOfflineMessageStore;
 import org.daybreak.openfire.plugin.bridge.resource.GroupResource;
 import org.daybreak.openfire.plugin.bridge.resource.MessageResource;
 import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
 import org.daybreak.openfire.plugin.bridge.utils.RedisUtil;
-import org.dom4j.io.XMPPPacketReader;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.jivesoftware.openfire.OfflineMessageStore;
+import org.jivesoftware.openfire.OfflineMessageStrategy;
 import org.jivesoftware.openfire.XMPPServer;
-import org.jivesoftware.openfire.clearspace.ClearspaceManager;
 import org.jivesoftware.openfire.container.Module;
 import org.jivesoftware.openfire.container.Plugin;
 import org.jivesoftware.openfire.container.PluginManager;
 import org.jivesoftware.openfire.interceptor.InterceptorManager;
 import org.jivesoftware.openfire.interceptor.PacketInterceptor;
-import org.jivesoftware.openfire.net.MXParser;
 import org.jivesoftware.openfire.vcard.VCardManager;
 import org.jivesoftware.util.JiveGlobals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -77,6 +72,10 @@ public class BridgePlugin implements Plugin {
         // 启动http服务器
         httpServer = startHttpServer();
         Log.info("Grizzly HTTP server启动成功！");
+
+        // 设置离线消息quota大小
+        OfflineMessageStrategy offlineMessageStrategy = XMPPServer.getInstance().getOfflineMessageStrategy();
+        offlineMessageStrategy.setQuota(Integer.MAX_VALUE);
     }
 
     /**

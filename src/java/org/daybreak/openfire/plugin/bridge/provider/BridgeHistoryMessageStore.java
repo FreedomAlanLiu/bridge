@@ -74,9 +74,16 @@ public class BridgeHistoryMessageStore {
         // 无需存储的消息
         if (message.getBody() == null) {
             if (message.getExtension(MessageExtension.ELEMENT_NAME, MessageExtension.NAMESPACE) == null
-                    || message.getExtension("data", "urn:xmpp:bob") == null) {
+                    && message.getExtension("data", "urn:xmpp:bob") == null) {
                 return;
             }
+        }
+
+        // 回复时间消息不应该存储
+        PacketExtension responseTimestampExtension = message.getExtension(TimestampResponseExtension.ELEMENT_NAME,
+                TimestampResponseExtension.NAMESPACE);
+        if (responseTimestampExtension != null) {
+            return;
         }
 
         // Get the message in XML format.
@@ -99,7 +106,7 @@ public class BridgeHistoryMessageStore {
         } else {
             // 经过broadcast插件解析过后的含有前缀消息不存储
             String prefix = JiveGlobals.getProperty("plugin.broadcast.messagePrefix", "(broadcast)");
-            if (message.getBody().startsWith(prefix)) {
+            if (message.getBody() != null && message.getBody().startsWith(prefix)) {
                 return;
             }
             history.setMessageType(History.CHAT);

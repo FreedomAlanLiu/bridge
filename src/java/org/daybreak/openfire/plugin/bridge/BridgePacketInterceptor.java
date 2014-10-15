@@ -9,6 +9,7 @@ import org.daybreak.openfire.plugin.bridge.resource.MessageExtension;
 import org.daybreak.openfire.plugin.bridge.service.BaiduYunService;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
 import org.daybreak.openfire.plugin.bridge.utils.MongoUtil;
+import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
@@ -48,7 +49,7 @@ public class BridgePacketInterceptor implements PacketInterceptor {
             JID toJID = packet.getTo();
             String body = ((Message) packet).getBody();
             try {
-                if (toJID != null && body != null) {
+                if (toJID != null) {
                     logger.info("incoming message:" + packet.toXML());
                     BridgeHistoryMessageStore.getInstance().addMessage((Message) packet);
                 }
@@ -74,8 +75,8 @@ public class BridgePacketInterceptor implements PacketInterceptor {
                     JID fromJID = message.getFrom();
                     JID toJID = message.getTo();
                     String messageBody = message.getBody();
-                    if (StringUtils.isEmpty(messageBody)) {
-                        return;
+                    if (messageBody == null) {
+                        messageBody = "";
                     }
 
                     BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
@@ -95,6 +96,18 @@ public class BridgePacketInterceptor implements PacketInterceptor {
 
                     PacketExtension extension = message.getExtension(MessageExtension.ELEMENT_NAME, MessageExtension.ELEMENT_NAME);
                     if (extension != null) {
+                        return;
+                    }
+
+                    PacketExtension dataExtension = message.getExtension("data", "urn:xmpp:bob");
+                    if (dataExtension != null) {
+                        Attribute typeAttr = dataExtension.getElement().attribute("type");
+                        if (typeAttr != null && typeAttr.getValue().startsWith("image")) {
+                            messageBody += "[图片]";
+                        }
+                    }
+
+                    if (StringUtils.isEmpty(messageBody)) {
                         return;
                     }
 
