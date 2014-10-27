@@ -160,13 +160,16 @@ public class BaiduYunServiceImpl implements BaiduYunService {
     }
 
     @Override
-    public void pushBroadcastMessage(String groupId, String message) {
+    public void pushBroadcastMessage(String fromId, String groupId, String message) {
         BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
         GroupManager groupManager = GroupManager.getInstance();
         try {
             Group group = groupManager.getGroup(groupId);
             Collection<JID> members = group.getMembers();
             for (JID jid : members) {
+                if (jid.getNode().equals(fromId)) {
+                    continue;
+                }
                 try {
                     List<Device> devices = bridgeService.findDevice(jid.getNode());
                     logger.info("devices size: " + devices.size());

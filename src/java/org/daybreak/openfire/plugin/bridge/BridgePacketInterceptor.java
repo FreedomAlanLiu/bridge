@@ -160,7 +160,7 @@ public class BridgePacketInterceptor implements PacketInterceptor {
                             article.setMessageType(MessageType.broadcast.toString());
                             //baiduYunService.pushTagMessage(toJID.getNode(), "android", bridgeService.toJson(article));
                             //baiduYunService.pushTagMessage(toJID.getNode(), "ios", bridgeService.toJson(article));
-                            baiduYunService.pushBroadcastMessage(toJID.getNode(), bridgeService.toJson(article));
+                            baiduYunService.pushBroadcastMessage(fromJID.getNode(), toJID.getNode(), bridgeService.toJson(article));
                         } catch (IOException e) {
                             logger.error("", e);
                         }
