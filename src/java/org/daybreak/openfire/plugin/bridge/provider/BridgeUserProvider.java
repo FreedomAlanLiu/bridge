@@ -3,10 +3,7 @@ package org.daybreak.openfire.plugin.bridge.provider;
 import org.apache.commons.lang3.StringUtils;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
 import org.daybreak.openfire.plugin.bridge.BridgeServiceFactory;
-import org.jivesoftware.openfire.user.User;
-import org.jivesoftware.openfire.user.UserAlreadyExistsException;
-import org.jivesoftware.openfire.user.UserNotFoundException;
-import org.jivesoftware.openfire.user.UserProvider;
+import org.jivesoftware.openfire.user.*;
 import org.jivesoftware.util.cache.Cache;
 import org.jivesoftware.util.cache.CacheFactory;
 
@@ -19,8 +16,18 @@ import java.util.Set;
  */
 public class BridgeUserProvider implements UserProvider {
 
+    JDBCUserProvider jdbcUserProvider;
+
+    public BridgeUserProvider() {
+        jdbcUserProvider = new JDBCUserProvider();
+    }
+
     @Override
     public User loadUser(String userId) throws UserNotFoundException {
+        if ("admin".equalsIgnoreCase(userId)) {
+            return jdbcUserProvider.loadUser(userId);
+        }
+
         BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
         org.daybreak.openfire.plugin.bridge.model.User bridgeUser = null;
         try {

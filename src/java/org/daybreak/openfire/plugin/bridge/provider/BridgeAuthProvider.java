@@ -3,10 +3,7 @@ package org.daybreak.openfire.plugin.bridge.provider;
 import org.daybreak.openfire.plugin.bridge.exception.BridgeException;
 import org.daybreak.openfire.plugin.bridge.service.BridgeService;
 import org.daybreak.openfire.plugin.bridge.BridgeServiceFactory;
-import org.jivesoftware.openfire.auth.AuthProvider;
-import org.jivesoftware.openfire.auth.ConnectionException;
-import org.jivesoftware.openfire.auth.InternalUnauthenticatedException;
-import org.jivesoftware.openfire.auth.UnauthorizedException;
+import org.jivesoftware.openfire.auth.*;
 import org.jivesoftware.openfire.user.UserNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +17,10 @@ public class BridgeAuthProvider implements AuthProvider {
 
     private static final Logger Log = LoggerFactory.getLogger(BridgeAuthProvider.class);
 
-    public BridgeAuthProvider() {
+    JDBCAuthProvider jdbcAuthProvider;
 
+    public BridgeAuthProvider() {
+        jdbcAuthProvider = new JDBCAuthProvider();
     }
 
     @Override
@@ -36,7 +35,13 @@ public class BridgeAuthProvider implements AuthProvider {
 
     @Override
     public void authenticate(String userId, String password) throws UnauthorizedException, ConnectionException, InternalUnauthenticatedException {
-        Log.info("authenticate userId=" + userId + "    " + "password=" + password);
+        Log.info("authenticate userId=" + userId);
+
+        if ("admin".equalsIgnoreCase(userId)) {
+            jdbcAuthProvider.authenticate(userId, password);
+            return;
+        }
+
         BridgeService bridgeService = (BridgeService) BridgeServiceFactory.getBean("bridgeService");
         try {
             bridgeService.auth(userId, password);
